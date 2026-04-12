@@ -7,7 +7,11 @@ __pycache__/
 .venv/
 .venv*/
 .claude/
+.DS_Store
+.mm/
 *.pyc
+*.log
 *.har
 *.xlsx
+gunicorn.ctl
 openclaw-secrets-handoff.env
