@@ -1,0 +1,25 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+AUTHORIZED_USER_ID = int(os.getenv("TELEGRAM_AUTHORIZED_USER_ID", "0"))
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+CLAUDE_MODEL_CHAT = os.getenv("CLAUDE_MODEL_CHAT", "claude-haiku-4-5-20251001")
+CLAUDE_MODEL_EXTRACTION = os.getenv("CLAUDE_MODEL_EXTRACTION", CLAUDE_MODEL_CHAT)
+CLAUDE_MODEL_REPORT = os.getenv("CLAUDE_MODEL_REPORT", "claude-sonnet-4-6")
+NOTION_DIGESTS_DB_ID = os.getenv("NOTION_DIGESTS_DB_ID")
+NOTION_HABITS_DB_ID = os.getenv("NOTION_HABITS_DB_ID", "2288ab07-f288-81e4-87c2-000b16a12f95")
+
+ICLOUD_EMAIL = os.getenv("ICLOUD_EMAIL")
+ICLOUD_APP_PASSWORD = os.getenv("ICLOUD_APP_PASSWORD")
+
+# Hayward OmniLogic (cloud API — use your Hayward app credentials)
+HAYWARD_EMAIL = os.getenv("HAYWARD_EMAIL")
+HAYWARD_PASSWORD = os.getenv("HAYWARD_PASSWORD")
+
+# Leslie's Pool portal
+LESLIES_EMAIL = os.getenv("LESLIES_EMAIL")
+LESLIES_PASSWORD = os.getenv("LESLIES_PASSWORD")
+LESLIES_POOL_ID = os.getenv("LESLIES_POOL_ID", "6210168")

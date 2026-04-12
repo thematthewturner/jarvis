@@ -1,0 +1,13 @@
+.env
+*.env
+*.json
+!requirements*.json
+data/
+__pycache__/
+.venv/
+.venv*/
+.claude/
+*.pyc
+*.har
+*.xlsx
+openclaw-secrets-handoff.env

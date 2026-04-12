@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>J.A.R.V.I.S. — Authenticate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --void:       #0a0c10;
+      --plate:      #12151c;
+      --panel:      #1a1e2a;
+      --arc:        #4fc3f7;
+      --arc-bright: #81d4fa;
+      --arc-glow:   rgba(79, 195, 247, 0.15);
+      --arc-pulse:  rgba(79, 195, 247, 0.08);
+      --arc-border: rgba(79, 195, 247, 0.12);
+      --arc-border-hi: rgba(79, 195, 247, 0.35);
+      --red:        #ef5350;
+      --text:       #e1e8f0;
+      --muted:      #8899aa;
+      --dim:        #556677;
+      --font-mono:  'JetBrains Mono', monospace;
+      --font-body:  'Outfit', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font-body);
+      background: var(--void);
+      color: var(--text);
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(79,195,247,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,195,247,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Scanline */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(79, 195, 247, 0.012) 0px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .center {
+      position: relative; z-index: 1;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: var(--plate);
+      border: 1px solid var(--arc-border);
+      border-radius: 16px;
+      padding: 2.5rem 2.2rem 2rem;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 0 40px rgba(79,195,247,0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* Arc reactor dot */
+    .reactor {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center,
+        rgba(79,195,247,0.9) 0%,
+        rgba(79,195,247,0.4) 40%,
+        rgba(79,195,247,0.05) 70%
+      );
+      border: 1px solid rgba(79,195,247,0.5);
+      box-shadow:
+        0 0 12px rgba(79,195,247,0.6),
+        0 0 30px rgba(79,195,247,0.25),
+        inset 0 0 8px rgba(79,195,247,0.3);
+      animation: breathe 2.8s ease-in-out infinite;
+      margin-bottom: 1.1rem;
+    }
+
+    @keyframes breathe {
+      0%, 100% { box-shadow: 0 0 12px rgba(79,195,247,0.6), 0 0 30px rgba(79,195,247,0.25), inset 0 0 8px rgba(79,195,247,0.3); }
+      50%       { box-shadow: 0 0 18px rgba(79,195,247,0.9), 0 0 50px rgba(79,195,247,0.4), inset 0 0 12px rgba(79,195,247,0.5); }
+    }
+
+    .title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--arc);
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-bottom: 2rem;
+    }
+
+    .pin-wrap {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .pin-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .pin-input {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--arc-border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      letter-spacing: 0.35em;
+      color: var(--arc);
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .pin-input:focus {
+      border-color: var(--arc-border-hi);
+      box-shadow: 0 0 0 3px var(--arc-pulse);
+    }
+
+    .pin-input::placeholder {
+      color: var(--dim);
+      letter-spacing: 0.2em;
+      font-size: 0.9rem;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--arc);
+      color: var(--void);
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    }
+
+    .submit-btn:hover {
+      background: var(--arc-bright);
+      box-shadow: 0 0 16px rgba(79,195,247,0.4);
+    }
+
+    .submit-btn:active { transform: scale(0.98); }
+
+    .error {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--red);
+      letter-spacing: 0.06em;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+<div class="center">
+  <div class="card">
+    <div class="reactor"></div>
+    <div class="title">J.A.R.V.I.S.</div>
+    <div class="subtitle">_ identity verification required</div>
+
+    <form class="pin-wrap" method="POST" action="/login">
+      <label class="pin-label" for="pin">Access PIN</label>
+      <input
+        class="pin-input"
+        type="password"
+        id="pin"
+        name="pin"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="10"
+        placeholder="······"
+        autocomplete="current-password"
+        autofocus
+      />
+      <button class="submit-btn" type="submit">Authenticate</button>
+      {% if error %}
+        <div class="error">// {{ error }} — access denied</div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+</body>
+</html>

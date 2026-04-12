@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jarvis — Fitness</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0a0a0a;
+    --surface:  #1a1a1a;
+    --surface2: #222222;
+    --border:   #2a2a2a;
+    --text:     #e2e2e2;
+    --dim:      #666666;
+    --accent:   #7c6af7;
+    --green:    #22c55e;
+    --yellow:   #eab308;
+    --red:      #ef4444;
+    --lime:     #a3e635;
+    --radius:   12px;
+    --font:     -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; }
+
+  /* ── Header ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 52px;
+    border-bottom: 1px solid var(--border);
+    background: #111;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .back-link { color: var(--dim); text-decoration: none; font-size: 13px; transition: color 0.15s; }
+  .back-link:hover { color: var(--text); }
+  .sync-btn {
+    padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 12px;
+    font-family: var(--font); cursor: pointer; transition: all 0.15s;
+  }
+  .sync-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .sync-btn:disabled { opacity: 0.4; pointer-events: none; }
+  .last-sync { font-size: 11px; color: var(--dim); }
+
+  /* ── Page ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+  /* ── Today tiles ── */
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin-bottom: 14px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 36px; }
+
+  .tile {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .tile-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+  .tile-value { font-size: 28px; font-weight: 700; line-height: 1; }
+  .tile-sub { font-size: 11px; color: var(--dim); }
+
+  .tile.green  { border-color: rgba(34,197,94,0.3);  background: rgba(34,197,94,0.06); }
+  .tile.yellow { border-color: rgba(234,179,8,0.3);  background: rgba(234,179,8,0.06); }
+  .tile.red    { border-color: rgba(239,68,68,0.3);  background: rgba(239,68,68,0.06); }
+  .tile.green  .tile-value { color: var(--green); }
+  .tile.yellow .tile-value { color: var(--yellow); }
+  .tile.red    .tile-value { color: var(--red); }
+
+  /* ── Charts ── */
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .chart-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .chart-subtitle { font-size: 11px; color: var(--dim); margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 180px; }
+
+  /* ── Loading / Error ── */
+  .loading { text-align: center; padding: 80px; color: var(--dim); }
+  .error-msg { color: var(--red); text-align: center; padding: 40px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Jarvis
+  </div>
+  <div class="header-right">
+    <span class="last-sync" id="last-sync"></span>
+    <button class="sync-btn" id="sync-btn" onclick="syncData()">↻ Sync WHOOP</button>
+    <a class="back-link" href="/">← Back to chat</a>
+  </div>
+</header>
+
+<div class="page" id="page">
+  <div class="loading" id="loading">Loading WHOOP data…</div>
+</div>
+
+<script>
+let charts = {};
+
+function recColor(score) {
+  if (score == null) return '';
+  if (score >= 67) return 'green';
+  if (score >= 34) return 'yellow';
+  return 'red';
+}
+
+function recLabel(score) {
+  if (score == null) return '—';
+  if (score >= 67) return 'Green';
+  if (score >= 34) return 'Yellow';
+  return 'Red';
+}
+
+function fmt(val, decimals = 0) {
+  return val != null ? Number(val).toFixed(decimals) : '—';
+}
+
+function renderToday(today) {
+  const rec = today.recovery_score;
+  const colorClass = recColor(rec);
+  return `
+    <div class="tile ${colorClass}">
+      <div class="tile-label">Recovery</div>
+      <div class="tile-value">${rec != null ? Math.round(rec) + '%' : '—'}</div>
+      <div class="tile-sub">${recLabel(rec)}</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">HRV</div>
+      <div class="tile-value">${fmt(today.hrv, 0)}</div>
+      <div class="tile-sub">ms rMSSD</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Resting HR</div>
+      <div class="tile-value">${fmt(today.resting_hr)}</div>
+      <div class="tile-sub">bpm</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Sleep</div>
+      <div class="tile-value">${today.sleep_performance != null ? today.sleep_performance + '%' : '—'}</div>
+      <div class="tile-sub">${today.sleep_duration_hrs != null ? today.sleep_duration_hrs + 'h' : ''}</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Strain</div>
+      <div class="tile-value">${fmt(today.strain, 1)}</div>
+      <div class="tile-sub">/ 21</div>
+    </div>`;
+}
+
+function buildChart(id, labels, data, opts) {
+  const ctx = document.getElementById(id).getContext('2d');
+  if (charts[id]) charts[id].destroy();
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+  gradient.addColorStop(0, opts.color + '33');
+  gradient.addColorStop(1, opts.color + '00');
+
+  charts[id] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: opts.color,
+        backgroundColor: gradient,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: opts.color,
+        pointHoverRadius: 5,
+        fill: true,
+        tension: 0.3,
+        spanGaps: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          borderColor: '#2a2a2a',
+          borderWidth: 1,
+          titleColor: '#666',
+          bodyColor: '#e2e2e2',
+          callbacks: {
+            label: ctx => `${ctx.parsed.y != null ? Number(ctx.parsed.y).toFixed(opts.decimals ?? 0) : '—'} ${opts.unit ?? ''}`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#1e1e1e' },
+          ticks: { color: '#555', maxTicksLimit: 8, font: { size: 10 } },
+        },
+        y: {
+          grid: { color: '#1e1e1e' },
+          ticks: { color: '#555', font: { size: 10 } },
+          min: opts.min,
+          max: opts.max,
+        }
+      }
+    }
+  });
+}
+
+function renderCharts(records) {
+  const labels = records.map(r => {
+    const d = new Date(r.date + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+
+  buildChart('chart-recovery', labels,
+    records.map(r => r.recovery_score),
+    { color: '#22c55e', unit: '%', min: 0, max: 100 });
+
+  buildChart('chart-hrv', labels,
+    records.map(r => r.hrv),
+    { color: '#7c6af7', unit: 'ms', decimals: 0 });
+
+  buildChart('chart-sleep', labels,
+    records.map(r => r.sleep_performance),
+    { color: '#38bdf8', unit: '%', min: 0, max: 100 });
+
+  buildChart('chart-strain', labels,
+    records.map(r => r.strain),
+    { color: '#f97316', unit: '/21', decimals: 1, min: 0, max: 21 });
+}
+
+function renderPage(records) {
+  const today = records.length ? records[records.length - 1] : {};
+  const page = document.getElementById('page');
+  page.innerHTML = `
+    <div class="section-label">Today — ${today.date ?? '—'}</div>
+    <div class="tiles">${renderToday(today)}</div>
+    <div class="section-label">30-Day Trends</div>
+    <div class="charts">
+      <div class="chart-card">
+        <div class="chart-title">Recovery Score</div>
+        <div class="chart-subtitle">0–100 · Green ≥ 67, Yellow 34–66, Red &lt; 34</div>
+        <div class="chart-wrap"><canvas id="chart-recovery"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">HRV (rMSSD)</div>
+        <div class="chart-subtitle">Heart rate variability in milliseconds</div>
+        <div class="chart-wrap"><canvas id="chart-hrv"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Sleep Performance</div>
+        <div class="chart-subtitle">Percentage of sleep need met</div>
+        <div class="chart-wrap"><canvas id="chart-sleep"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Day Strain</div>
+        <div class="chart-subtitle">WHOOP strain scale 0–21</div>
+        <div class="chart-wrap"><canvas id="chart-strain"></canvas></div>
+      </div>
+    </div>`;
+  renderCharts(records);
+}
+
+async function loadData(forceSync = false) {
+  const url = forceSync ? '/api/whoop/history?sync=true' : '/api/whoop/history';
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const json = await resp.json();
+  return json.records || [];
+}
+
+async function syncData() {
+  const btn = document.getElementById('sync-btn');
+  btn.disabled = true;
+  btn.textContent = '↻ Syncing…';
+  document.getElementById('last-sync').textContent = '';
+  try {
+    const records = await loadData(true);
+    renderPage(records);
+    document.getElementById('last-sync').textContent = 'Synced just now';
+  } catch (e) {
+    document.getElementById('page').innerHTML = `<div class="error-msg">Sync failed: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↻ Sync WHOOP';
+  }
+}
+
+// Initial load
+(async () => {
+  try {
+    const records = await loadData();
+    renderPage(records);
+    if (records.length) {
+      document.getElementById('last-sync').textContent = `Last synced ${records[records.length-1].synced_at?.slice(0,10) ?? ''}`;
+    }
+  } catch (e) {
+    document.getElementById('loading').innerHTML = `<div class="error-msg">Failed to load: ${e.message}</div>`;
+  }
+})();
+</script>
+</body>
+</html>

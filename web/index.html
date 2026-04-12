@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jarvis</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0a0a0a;
+    --sidebar:   #111111;
+    --surface:   #1a1a1a;
+    --surface2:  #222222;
+    --border:    #2a2a2a;
+    --text:      #e2e2e2;
+    --text-dim:  #666666;
+    --accent:    #7c6af7;
+    --accent-bg: #1e1a3a;
+    --user-bg:   #0f1f3d;
+    --user-border: #1e3a6e;
+    --success:   #22c55e;
+    --danger:    #ef4444;
+    --radius:    12px;
+    --font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono:      'SF Mono', 'Fira Code', monospace;
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Header ─────────────────────────────────────────────── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    background: var(--sidebar);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .header-status {
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+
+  /* ── Main layout ─────────────────────────────────────────── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ─────────────────────────────────────────────── */
+  aside {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 16px 12px;
+    gap: 6px;
+  }
+
+  .sidebar-section {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 8px 8px 4px;
+  }
+
+  .skill-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    width: 100%;
+  }
+
+  .skill-btn:hover {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .skill-btn:active, .skill-btn.active {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: #a99ef7;
+  }
+
+  .skill-btn .icon { font-size: 16px; flex-shrink: 0; }
+
+  .skill-btn .label {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .skill-btn .label-main { font-weight: 500; }
+  .skill-btn .label-sub { font-size: 11px; color: var(--text-dim); }
+
+  .skill-btn.loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 8px 0;
+  }
+
+  .clear-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: color 0.15s;
+  }
+
+  .clear-btn:hover { color: var(--danger); }
+
+  /* ── Chat area ───────────────────────────────────────────── */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 0;
+    scroll-behavior: smooth;
+  }
+
+  #messages::-webkit-scrollbar { width: 4px; }
+  #messages::-webkit-scrollbar-track { background: transparent; }
+  #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .message {
+    max-width: 780px;
+    margin: 0 auto 20px;
+    padding: 0 24px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .message-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .avatar {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .avatar-jarvis { background: var(--accent); color: white; }
+  .avatar-user   { background: #1e3a6e; color: #7eb8f7; }
+
+  .message-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .message-body {
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    line-height: 1.7;
+  }
+
+  .message-body.jarvis { background: var(--surface); }
+  .message-body.user   { background: var(--user-bg); border-color: var(--user-border); }
+
+  /* Markdown rendering */
+  .message-body h1, .message-body h2, .message-body h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    color: var(--text);
+  }
+  .message-body h1 { font-size: 17px; }
+  .message-body h2 { font-size: 15px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+  .message-body p  { margin: 8px 0; }
+  .message-body ul, .message-body ol { padding-left: 20px; margin: 8px 0; }
+  .message-body li { margin: 4px 0; }
+  .message-body strong { color: #f0f0f0; font-weight: 600; }
+  .message-body em { color: #b0b0b0; }
+  .message-body hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  .message-body code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface2);
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: #a99ef7;
+  }
+
+  .message-body pre {
+    background: #0d0d0d;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+
+  .message-body pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: 12px;
+  }
+
+  .message-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+
+  .message-body th, .message-body td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+
+  .message-body th { background: var(--surface2); font-weight: 600; }
+  .message-body tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  .message-body blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 4px 12px;
+    margin: 8px 0;
+    color: var(--text-dim);
+  }
+
+  /* Typing indicator */
+  .typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 16px;
+    height: 48px;
+  }
+
+  .typing span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: bounce 1.2s infinite;
+  }
+
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Error message */
+  .error-msg {
+    color: var(--danger);
+    font-size: 13px;
+    padding: 10px 14px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+  }
+
+  /* ── Input area ──────────────────────────────────────────── */
+  .input-area {
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .input-wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    transition: border-color 0.15s;
+  }
+
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+  }
+
+  #input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    resize: none;
+    line-height: 1.5;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 2px 0;
+  }
+
+  #input::placeholder { color: var(--text-dim); }
+
+  #input::-webkit-scrollbar { width: 3px; }
+  #input::-webkit-scrollbar-thumb { background: var(--border); }
+
+  #send-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.1s;
+    align-self: flex-end;
+  }
+
+  #send-btn:hover { opacity: 0.85; }
+  #send-btn:active { transform: scale(0.95); }
+  #send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ── Empty state ─────────────────────────────────────────── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-dim);
+    gap: 12px;
+    text-align: center;
+    padding: 40px;
+  }
+
+  .empty-icon { font-size: 40px; opacity: 0.5; }
+  .empty-title { font-size: 18px; font-weight: 600; color: var(--text); }
+  .empty-sub { font-size: 13px; max-width: 320px; }
+
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .suggestion {
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-dim);
+  }
+
+  .suggestion:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    background: var(--accent-bg);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Jarvis
+  </div>
+  <div class="header-status">
+    <div class="status-dot"></div>
+    Online
+  </div>
+</header>
+
+<div class="main">
+  <aside>
+    <div class="sidebar-section">Skills</div>
+
+    <button class="skill-btn" onclick="runSkill('briefing', this)">
+      <span class="icon">📋</span>
+      <div class="label">
+        <div class="label-main">Morning Briefing</div>
+        <div class="label-sub">Calendar, email, tasks</div>
+      </div>
+    </button>
+
+    <button class="skill-btn" onclick="runSkill('research', this)">
+      <span class="icon">🔬</span>
+      <div class="label">
+        <div class="label-main">Daily Research</div>
+        <div class="label-sub">Healthcare & AI news</div>
+      </div>
+    </button>
+
+    <button class="skill-btn" onclick="runSkill('budget_meeting', this)">
+      <span class="icon">📊</span>
+      <div class="label">
+        <div class="label-main">Budget Meeting</div>
+        <div class="label-sub">Spending & bills</div>
+      </div>
+    </button>
+
+    <a href="/fitness" style="text-decoration:none;">
+      <button class="skill-btn" style="color: #a3e635;">
+        <span class="icon">💪</span>
+        <div class="label">
+          <div class="label-main">Fitness</div>
+          <div class="label-sub">WHOOP · recovery trends</div>
+        </div>
+      </button>
+    </a>
+
+    <hr class="sidebar-divider">
+    <div class="sidebar-section">Session</div>
+
+    <button class="clear-btn" onclick="clearChat()">
+      <span>🗑</span> Clear conversation
+    </button>
+  </aside>
+
+  <div class="chat-area">
+    <div id="messages">
+      <div class="empty-state" id="empty">
+        <div class="empty-icon">⚡</div>
+        <div class="empty-title">Good to see you, Matt.</div>
+        <div class="empty-sub">Ask me anything, or use a skill from the sidebar.</div>
+        <div class="suggestions">
+          <div class="suggestion" onclick="sendSuggestion(this)">What are my account balances?</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">What's on my calendar today?</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">What tasks are due this week?</div>
+          <div class="suggestion" onclick="sendSuggestion(this)">Any unread emails I should know about?</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea
+          id="input"
+          placeholder="Message Jarvis..."
+          rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button id="send-btn" onclick="sendMessage()" title="Send (Enter)">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Marked config ─────────────────────────────────────────────────────────────
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+  highlight: (code, lang) => {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(code, { language: lang }).value;
+    }
+    return hljs.highlightAuto(code).value;
+  }
+});
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let isStreaming = false;
+
+// ── Load history ──────────────────────────────────────────────────────────────
+async function loadHistory() {
+  try {
+    const res = await fetch('/history');
+    const data = await res.json();
+    if (data.messages && data.messages.length > 0) {
+      hideEmpty();
+      data.messages.forEach(m => appendMessage(m.role, m.content, false));
+      scrollToBottom();
+    }
+  } catch (e) {
+    console.error('Failed to load history:', e);
+  }
+}
+
+// ── Send message ──────────────────────────────────────────────────────────────
+function sendMessage() {
+  const input = document.getElementById('input');
+  const text = input.value.trim();
+  if (!text || isStreaming) return;
+
+  hideEmpty();
+  appendMessage('user', text, false);
+  input.value = '';
+  autoResize(input);
+
+  streamFromEndpoint('/chat', { message: text });
+}
+
+function sendSuggestion(el) {
+  const input = document.getElementById('input');
+  input.value = el.textContent;
+  sendMessage();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+}
+
+// ── Skills ────────────────────────────────────────────────────────────────────
+function runSkill(skillName, btn) {
+  if (isStreaming) return;
+  hideEmpty();
+  btn.classList.add('active', 'loading');
+
+  const labels = {
+    briefing: 'Generating morning briefing...',
+    research: 'Fetching today\'s research...',
+    budget_meeting: 'Syncing Monarch and prepping budget meeting...',
+  };
+
+  appendMessage('user', labels[skillName] || `Running ${skillName}...`, false);
+  streamFromEndpoint(`/skill/${skillName}`, null, () => {
+    btn.classList.remove('active', 'loading');
+  });
+}
+
+// ── SSE streaming ─────────────────────────────────────────────────────────────
+function streamFromEndpoint(url, body, onDone) {
+  isStreaming = true;
+  setInputDisabled(true);
+
+  const typingEl = appendTyping();
+  let msgEl = null;
+  let fullText = '';
+
+  const options = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (body) options.body = JSON.stringify(body);
+
+  fetch(url, options).then(res => {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    function pump() {
+      return reader.read().then(({ done, value }) => {
+        if (done) {
+          finishStream();
+          return;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete line
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+
+            if (data.error) {
+              typingEl.remove();
+              appendMessage('jarvis', `⚠️ ${data.error}`, true, true);
+              finishStream();
+              return;
+            }
+
+            if (data.text) {
+              if (!msgEl) {
+                typingEl.remove();
+                msgEl = appendMessage('jarvis', '', true);
+              }
+              fullText += data.text;
+              updateMessageContent(msgEl, fullText);
+              scrollToBottom();
+            }
+
+            if (data.done) {
+              finishStream();
+            }
+          } catch (e) {
+            // ignore parse errors
+          }
+        }
+
+        return pump();
+      });
+    }
+
+    pump().catch(err => {
+      console.error('Stream error:', err);
+      finishStream();
+    });
+
+  }).catch(err => {
+    typingEl.remove();
+    appendMessage('jarvis', `⚠️ Connection error: ${err.message}`, true, true);
+    finishStream();
+  });
+
+  function finishStream() {
+    isStreaming = false;
+    setInputDisabled(false);
+    if (onDone) onDone();
+    document.getElementById('input').focus();
+  }
+}
+
+// ── DOM helpers ───────────────────────────────────────────────────────────────
+function appendMessage(role, content, isJarvis, isError = false) {
+  const container = document.getElementById('messages');
+  const isAssistant = role === 'assistant' || isJarvis;
+
+  const div = document.createElement('div');
+  div.className = 'message';
+
+  const header = document.createElement('div');
+  header.className = 'message-header';
+
+  const avatar = document.createElement('div');
+  avatar.className = `avatar ${isAssistant ? 'avatar-jarvis' : 'avatar-user'}`;
+  avatar.textContent = isAssistant ? 'J' : 'M';
+
+  const name = document.createElement('div');
+  name.className = 'message-name';
+  name.textContent = isAssistant ? 'Jarvis' : 'Matt';
+
+  header.appendChild(avatar);
+  header.appendChild(name);
+
+  const body = document.createElement('div');
+  body.className = `message-body ${isAssistant ? 'jarvis' : 'user'}`;
+
+  if (isError) {
+    body.innerHTML = `<div class="error-msg">${content}</div>`;
+  } else if (isAssistant) {
+    body.innerHTML = renderMarkdownSafe(content || '');
+  } else {
+    body.textContent = content;
+  }
+
+  div.appendChild(header);
+  div.appendChild(body);
+  container.appendChild(div);
+  scrollToBottom();
+  return body; // return body for updates
+}
+
+function updateMessageContent(bodyEl, text) {
+  bodyEl.innerHTML = renderMarkdownSafe(text);
+  // Re-highlight code blocks
+  bodyEl.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+}
+
+function renderMarkdownSafe(text) {
+  const raw = marked.parse(text || '');
+  if (window.DOMPurify) {
+    return DOMPurify.sanitize(raw, {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+    });
+  }
+  return raw;
+}
+
+function appendTyping() {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'message';
+
+  const header = document.createElement('div');
+  header.className = 'message-header';
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar avatar-jarvis';
+  avatar.textContent = 'J';
+  const name = document.createElement('div');
+  name.className = 'message-name';
+  name.textContent = 'Jarvis';
+  header.appendChild(avatar);
+  header.appendChild(name);
+
+  const body = document.createElement('div');
+  body.className = 'message-body jarvis';
+  body.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+
+  div.appendChild(header);
+  div.appendChild(body);
+  container.appendChild(div);
+  scrollToBottom();
+  return div;
+}
+
+function hideEmpty() {
+  const empty = document.getElementById('empty');
+  if (empty) empty.remove();
+}
+
+function scrollToBottom() {
+  const messages = document.getElementById('messages');
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function setInputDisabled(disabled) {
+  document.getElementById('input').disabled = disabled;
+  document.getElementById('send-btn').disabled = disabled;
+}
+
+function clearChat() {
+  if (isStreaming) return;
+  const container = document.getElementById('messages');
+  container.innerHTML = `
+    <div class="empty-state" id="empty">
+      <div class="empty-icon">⚡</div>
+      <div class="empty-title">Good to see you, Matt.</div>
+      <div class="empty-sub">Ask me anything, or use a skill from the sidebar.</div>
+      <div class="suggestions">
+        <div class="suggestion" onclick="sendSuggestion(this)">What are my account balances?</div>
+        <div class="suggestion" onclick="sendSuggestion(this)">What's on my calendar today?</div>
+        <div class="suggestion" onclick="sendSuggestion(this)">What tasks are due this week?</div>
+        <div class="suggestion" onclick="sendSuggestion(this)">Any unread emails I should know about?</div>
+      </div>
+    </div>`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadHistory();
+  document.getElementById('input').focus();
+});
+</script>
+</body>
+</html>

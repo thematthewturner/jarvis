@@ -1,0 +1,147 @@
+/* ═══════════════════════════════════════════════════════════════
+   JARVIS — Iron Man HUD Color System
+   Just A Rather Very Intelligent System • Color Protocol v3.0
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Core Surfaces ────────────────────────────── */
+  --jarvis-void:         #0a0c10;   /* deepest background          */
+  --jarvis-plate:        #12151c;   /* card / panel background      */
+  --jarvis-panel:        #1a1e2a;   /* elevated surfaces            */
+  --jarvis-panel-hover:  #222738;   /* interactive hover state      */
+
+  /* ── Arc Reactor Blue — Primary ───────────────── */
+  --jarvis-arc:          #4fc3f7;   /* primary actions & highlights */
+  --jarvis-arc-bright:   #81d4fa;   /* hover / active states        */
+  --jarvis-arc-dim:      #0288d1;   /* pressed / visited states     */
+  --jarvis-arc-glow:     rgba(79, 195, 247, 0.15);  /* ambient glow  */
+  --jarvis-arc-pulse:    rgba(79, 195, 247, 0.08);  /* subtle pulse  */
+
+  /* ── Stark Gold — Accent ──────────────────────── */
+  --jarvis-gold:         #ffc107;   /* highlights & badges          */
+  --jarvis-gold-bright:  #ffd54f;   /* hover state                  */
+  --jarvis-gold-dim:     #ff8f00;   /* pressed state                */
+  --jarvis-gold-glow:    rgba(255, 193, 7, 0.12);   /* ambient glow */
+
+  /* ── HUD Red — Warning / Danger ───────────────── */
+  --jarvis-red:          #ef5350;   /* errors & alerts              */
+  --jarvis-red-bright:   #ff8a80;   /* hover state                  */
+  --jarvis-red-dim:      #c62828;   /* pressed state                */
+  --jarvis-red-glow:     rgba(239, 83, 80, 0.12);   /* ambient glow */
+
+  /* ── Status Green — Success ───────────────────── */
+  --jarvis-green:        #66bb6a;   /* success indicators           */
+  --jarvis-green-bright: #a5d6a7;   /* hover state                  */
+  --jarvis-green-dim:    #2e7d32;   /* pressed state                */
+
+  /* ── Text Hierarchy ───────────────────────────── */
+  --jarvis-text:         #e1e8f0;   /* primary text                 */
+  --jarvis-text-muted:   #8899aa;   /* secondary / labels           */
+  --jarvis-text-dim:     #556677;   /* disabled / tertiary          */
+
+  /* ── Borders & Dividers ───────────────────────── */
+  --jarvis-border:         rgba(79, 195, 247, 0.12);
+  --jarvis-border-active:  rgba(79, 195, 247, 0.35);
+  --jarvis-divider:        rgba(255, 255, 255, 0.06);
+
+  /* ── Utility Gradients ────────────────────────── */
+  --jarvis-gradient-arc:   linear-gradient(135deg, #0288d1, #4fc3f7);
+  --jarvis-gradient-gold:  linear-gradient(135deg, #ff8f00, #ffc107);
+  --jarvis-gradient-hud:   linear-gradient(180deg, rgba(79, 195, 247, 0.05) 0%, transparent 60%);
+  --jarvis-gradient-plate: linear-gradient(180deg, #1a1e2a 0%, #12151c 100%);
+
+  /* ── Glow Shadows ─────────────────────────────── */
+  --jarvis-shadow-arc:   0 0 20px rgba(79, 195, 247, 0.25), 0 0 60px rgba(79, 195, 247, 0.1);
+  --jarvis-shadow-gold:  0 0 20px rgba(255, 193, 7, 0.20), 0 0 60px rgba(255, 193, 7, 0.08);
+  --jarvis-shadow-red:   0 0 20px rgba(239, 83, 80, 0.20), 0 0 60px rgba(239, 83, 80, 0.08);
+  --jarvis-shadow-soft:  0 4px 24px rgba(0, 0, 0, 0.4);
+
+  /* ── Typography (recommended) ─────────────────── */
+  --jarvis-font-display:  'Outfit', 'SF Pro Display', sans-serif;
+  --jarvis-font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+  --jarvis-font-body:     'Outfit', 'SF Pro Text', sans-serif;
+
+  /* ── Transitions ──────────────────────────────── */
+  --jarvis-ease:         cubic-bezier(0.4, 0, 0.2, 1);
+  --jarvis-duration:     200ms;
+  --jarvis-duration-slow: 400ms;
+}
+
+
+/* ── Base Reset ─────────────────────────────────── */
+body.jarvis-theme {
+  background-color: var(--jarvis-void);
+  color: var(--jarvis-text);
+  font-family: var(--jarvis-font-body);
+  line-height: 1.6;
+}
+
+
+/* ── Scanline Overlay (optional atmosphere) ─────── */
+body.jarvis-theme::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(79, 195, 247, 0.015) 0px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+
+/* ── Scrollbar ──────────────────────────────────── */
+.jarvis-theme ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.jarvis-theme ::-webkit-scrollbar-track {
+  background: var(--jarvis-plate);
+}
+.jarvis-theme ::-webkit-scrollbar-thumb {
+  background: rgba(79, 195, 247, 0.2);
+  border-radius: 3px;
+}
+.jarvis-theme ::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 195, 247, 0.35);
+}
+
+
+/* ── Utility Classes ────────────────────────────── */
+.jarvis-glow-arc  { box-shadow: var(--jarvis-shadow-arc); }
+.jarvis-glow-gold { box-shadow: var(--jarvis-shadow-gold); }
+.jarvis-glow-red  { box-shadow: var(--jarvis-shadow-red); }
+
+.jarvis-text-arc   { color: var(--jarvis-arc); }
+.jarvis-text-gold  { color: var(--jarvis-gold); }
+.jarvis-text-red   { color: var(--jarvis-red); }
+.jarvis-text-green { color: var(--jarvis-green); }
+.jarvis-text-muted { color: var(--jarvis-text-muted); }
+.jarvis-text-dim   { color: var(--jarvis-text-dim); }
+
+.jarvis-bg-void   { background: var(--jarvis-void); }
+.jarvis-bg-plate  { background: var(--jarvis-plate); }
+.jarvis-bg-panel  { background: var(--jarvis-panel); }
+
+.jarvis-border     { border: 1px solid var(--jarvis-border); }
+.jarvis-border-active { border: 1px solid var(--jarvis-border-active); }
+
+
+/* ── Keyframes ──────────────────────────────────── */
+@keyframes jarvis-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+@keyframes jarvis-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes jarvis-glow-breathe {
+  0%, 100% { box-shadow: 0 0 12px rgba(79, 195, 247, 0.15); }
+  50%      { box-shadow: 0 0 24px rgba(79, 195, 247, 0.3); }
+}
