@@ -109,12 +109,22 @@ Jarvis now has an explicit ops layer for:
 - Inbox zero review
 - Digest quality scorecard
 - Digest cache and freshness policy
+- **Action audit log** — every write tool (add_task, send_email, log_pool_chemistry, …) records status, args, result, duration, and errors.
+- **Idempotency guard** — identical write calls inside a short per-tool window are deduped automatically before hitting external services.
+- **Job registry** — scheduled jobs record start/finish, duration, last success, and last error. Surfaced on the web dashboard.
 
 Primary modules:
 
 - `jarvis_ops.py`
+- `jarvis_reliability.py`
 - `daily_digest.py`
 - `web/app.py`
+
+## Reliability Endpoints
+
+- `GET /api/ops/overview` — rolled-up skills, health, jobs, audit totals
+- `GET /api/ops/jobs` — per-job last-run status and recent history
+- `GET /api/ops/audit?tool=<tool>&hours=<n>&limit=<n>` — recent write-tool activity with rollup
 
 ## Preferences
 

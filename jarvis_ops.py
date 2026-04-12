@@ -611,12 +611,53 @@ def get_skills_overview_text() -> str:
     return "\n".join(lines)
 
 
+KNOWN_SCHEDULED_JOBS = [
+    "financial_sync",
+    "daily_digest",
+    "inbox_triage",
+    "gmail_triage",
+    "investor_scan",
+    "action_nudges",
+    "pool_nudge",
+    "home_maintenance",
+    "weekly_finance_digest",
+]
+
+
 async def get_ops_overview(live_health: bool = False) -> dict:
+    from jarvis_reliability import (
+        get_action_rollup,
+        get_job_status,
+        get_recent_actions,
+        get_recent_job_runs,
+    )
+
     prefs = await get_preferences()
+    try:
+        jobs = await get_job_status(KNOWN_SCHEDULED_JOBS)
+    except Exception:
+        jobs = []
+    try:
+        recent_runs = await get_recent_job_runs(limit=20)
+    except Exception:
+        recent_runs = []
+    try:
+        audit_rollup = await get_action_rollup(hours=24)
+    except Exception:
+        audit_rollup = {"window_hours": 24, "totals": {}, "by_tool": []}
+    try:
+        recent_actions = await get_recent_actions(limit=25)
+    except Exception:
+        recent_actions = []
+
     return {
         "skills": get_skills_registry(),
         "preferences": prefs,
         "health": await get_source_health(live=live_health),
         "inbox_zero": await get_inbox_zero_center(),
         "digest_quality": await get_digest_quality_scorecard(),
+        "jobs": jobs,
+        "recent_job_runs": recent_runs,
+        "audit_rollup": audit_rollup,
+        "recent_actions": recent_actions,
     }
