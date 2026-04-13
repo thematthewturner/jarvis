@@ -14,4 +14,3 @@ __pycache__/
 *.har
 *.xlsx
 gunicorn.ctl
-openclaw-secrets-handoff.env
