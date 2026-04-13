@@ -12,8 +12,15 @@ def _require_todoist_token() -> str:
         raise RuntimeError("TODOIST_API_TOKEN is not configured.")
     return token
 
-async def handle_tool_call(tool_name: str, tool_input: dict) -> str:
-    handlers = {
+_HANDLERS: dict = {}
+
+
+def _build_handlers() -> dict:
+    # Lazy-initialized so that import ordering stays simple (the iCloud/Google
+    # sub-modules below are imported at module load).
+    if _HANDLERS:
+        return _HANDLERS
+    _HANDLERS.update({
         "save_note": save_note,
         "get_current_time": get_current_time,
         "add_task": add_task,
@@ -61,11 +68,25 @@ async def handle_tool_call(tool_name: str, tool_input: dict) -> str:
         "log_pr":               log_pr_tool,
         "get_prs":              get_prs_tool,
         "log_workout":          log_workout_tool,
-    }
+    })
+    return _HANDLERS
+
+
+async def handle_tool_call(tool_name: str, tool_input: dict, *, skill: str = "chat") -> str:
+    handlers = _build_handlers()
     handler = handlers.get(tool_name)
-    if handler:
-        return await handler(tool_input)
-    return f"Unknown tool: {tool_name}"
+    if not handler:
+        return f"Unknown tool: {tool_name}"
+    # Route through the reliability layer: read tools pass through untouched,
+    # write tools get audit logging + idempotency dedupe.
+    from jarvis_reliability import execute_and_log
+
+    return await execute_and_log(
+        tool=tool_name,
+        args=tool_input or {},
+        handler=handler,
+        skill=skill,
+    )
 
 async def save_note(input: dict) -> str:
     category = input["category"]

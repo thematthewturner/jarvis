@@ -804,6 +804,42 @@ def ops_overview():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/ops/jobs")
+@login_required
+def ops_jobs():
+    try:
+        from jarvis_ops import KNOWN_SCHEDULED_JOBS
+        from jarvis_reliability import get_job_status, get_recent_job_runs
+
+        jobs = asyncio.run(get_job_status(KNOWN_SCHEDULED_JOBS))
+        recent = asyncio.run(get_recent_job_runs(limit=30))
+        return jsonify({"jobs": jobs, "recent": recent})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/ops/audit")
+@login_required
+def ops_audit():
+    try:
+        from jarvis_reliability import get_action_rollup, get_recent_actions
+
+        tool = (request.args.get("tool") or "").strip() or None
+        try:
+            limit = int(request.args.get("limit", "50"))
+        except ValueError:
+            limit = 50
+        try:
+            hours = int(request.args.get("hours", "24"))
+        except ValueError:
+            hours = 24
+        rollup = asyncio.run(get_action_rollup(hours=hours))
+        actions = asyncio.run(get_recent_actions(limit=limit, tool=tool))
+        return jsonify({"rollup": rollup, "actions": actions})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/ops/preferences", methods=["GET", "POST"])
 @login_required
 def ops_preferences():

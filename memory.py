@@ -64,6 +64,9 @@ async def init_db():
     from jarvis_ops import init_ops_db
     await init_ops_db()
 
+    from jarvis_reliability import init_reliability_db
+    await init_reliability_db()
+
 
 async def save_message(role: str, content: str):
     async with db_connect() as db:

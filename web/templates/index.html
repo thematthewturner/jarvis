@@ -6949,6 +6949,52 @@
         `</div>`
       ).join('');
 
+      const jobs = data.jobs || [];
+      const jobsHtml = jobs.length ? jobs.map(job => {
+        const last = job.last_status || 'none';
+        const badge = last === 'ok' ? 'green' : last === 'error' ? 'red' : last === 'skipped' ? 'gold' : 'gold';
+        const lastRun = job.last_started_at || '—';
+        const lastOk = job.last_success_at || '—';
+        const errLine = job.last_error_message
+          ? `<div style="font-size:10px;color:var(--red);margin-top:3px">${escapeHtml(truncate(job.last_error_message, 120))}</div>`
+          : '';
+        const duration = job.last_duration_ms ? `${Math.round(job.last_duration_ms / 1000)}s` : '—';
+        return `<div style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.05)">` +
+          `<div style="display:flex;justify-content:space-between;gap:10px"><strong style="font-size:12px">${escapeHtml(job.job_name)}</strong><span class="intel-badge ${badge}">${escapeHtml(last)}</span></div>` +
+          `<div style="font-size:10px;color:var(--dim);margin-top:3px">last run ${escapeHtml(lastRun)} · duration ${escapeHtml(duration)}</div>` +
+          `<div style="font-size:10px;color:var(--dim)">last success ${escapeHtml(lastOk)}</div>` +
+          errLine +
+        `</div>`;
+      }).join('') : '<div class="intel-empty">No job runs recorded yet.</div>';
+
+      const rollup = data.audit_rollup || {};
+      const totals = rollup.totals || {};
+      const byTool = rollup.by_tool || [];
+      const byToolHtml = byTool.length ? byTool.map(t => {
+        const ok = t.ok || 0;
+        const err = t.error || 0;
+        const dd = t.dedup_skip || 0;
+        const errBadge = err > 0 ? ` <span class="intel-badge red">${err} err</span>` : '';
+        const dedupeBadge = dd > 0 ? ` <span class="intel-badge gold">${dd} dedup</span>` : '';
+        return `<div style="padding:6px 0;border-top:1px solid rgba(255,255,255,0.05);font-size:11px;display:flex;justify-content:space-between;gap:8px">` +
+          `<span><strong>${escapeHtml(t.tool)}</strong>${errBadge}${dedupeBadge}</span>` +
+          `<span style="color:var(--dim)">${escapeHtml(String(ok))} ok</span>` +
+        `</div>`;
+      }).join('') : '<div class="intel-empty">No write activity in the last 24h.</div>';
+
+      const recentActions = data.recent_actions || [];
+      const recentHtml = recentActions.length ? recentActions.slice(0, 12).map(a => {
+        const badge = a.status === 'ok' ? 'green' : a.status === 'error' ? 'red' : 'gold';
+        const result = a.error
+          ? `<span style="color:var(--red)">${escapeHtml(truncate(a.error, 120))}</span>`
+          : escapeHtml(truncate(a.result || '', 120));
+        return `<div style="padding:7px 0;border-top:1px solid rgba(255,255,255,0.05);font-size:11px">` +
+          `<div style="display:flex;justify-content:space-between;gap:8px"><strong>${escapeHtml(a.tool)}</strong><span class="intel-badge ${badge}">${escapeHtml(a.status)}</span></div>` +
+          `<div style="color:var(--dim);font-size:10px;margin-top:2px">${escapeHtml(a.created_at || '')} · ${escapeHtml(a.skill || 'chat')}${a.duration_ms ? ' · ' + escapeHtml(String(a.duration_ms)) + 'ms' : ''}</div>` +
+          `<div style="color:var(--muted);font-size:10px;margin-top:3px">${result}</div>` +
+        `</div>`;
+      }).join('') : '<div class="intel-empty">No recent actions.</div>';
+
       wrap.innerHTML =
         `<div class="intel-card" style="padding:14px 16px">` +
           `<div style="display:flex;justify-content:space-between;gap:12px;align-items:center">` +
@@ -6993,6 +7039,24 @@
         renderOpsBucket('Kids and School Actions', inbox.buckets?.kids_actions || [], 'No kids actions waiting.') +
         renderOpsBucket('Finance Review Queue', inbox.buckets?.finance_review || [], 'No finance items waiting.') +
         renderOpsBucket('Recent Todoist Nudges', inbox.buckets?.todoist_nudges || [], 'No recent nudges.') +
+        `<div class="intel-card" style="padding:14px 16px">` +
+          `<div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px">` +
+            `<div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim)">Scheduled Jobs</div>` +
+            `<span class="intel-badge ${jobs.some(j => j.last_status === 'error') ? 'red' : jobs.some(j => j.last_status === 'skipped') ? 'gold' : 'green'}">${escapeHtml(String(jobs.length))} jobs</span>` +
+          `</div>` +
+          `${jobsHtml}` +
+        `</div>` +
+        `<div class="intel-card" style="padding:14px 16px">` +
+          `<div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px">` +
+            `<div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim)">Write Tool Activity (24h)</div>` +
+            `<span style="font-size:10px;color:var(--dim)">${escapeHtml(String(totals.ok || 0))} ok · ${escapeHtml(String(totals.error || 0))} err · ${escapeHtml(String(totals.dedup_skip || 0))} dedup</span>` +
+          `</div>` +
+          `${byToolHtml}` +
+        `</div>` +
+        `<div class="intel-card" style="padding:14px 16px">` +
+          `<div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Recent Actions</div>` +
+          `${recentHtml}` +
+        `</div>` +
         `<div class="intel-card" style="padding:14px 16px">` +
           `<div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Skills Registry</div>` +
           `${skillsHtml}` +

@@ -35,16 +35,45 @@ SCHEDULED_JOB_LOCKS = {
 
 
 async def _run_scheduled(job_name: str, context: ContextTypes.DEFAULT_TYPE, runner):
+    from jarvis_reliability import start_job_run, finish_job_run, record_job_event
+
     lock = SCHEDULED_JOB_LOCKS[job_name]
     if lock.locked():
         logger.warning("Skipping scheduled job %s: previous run still active", job_name)
+        try:
+            await record_job_event(
+                job_name,
+                status="skipped",
+                note="previous run still active",
+            )
+        except Exception as log_err:
+            logger.error("Failed to record skipped job %s: %s", job_name, log_err)
         await context.bot.send_message(
             chat_id=AUTHORIZED_USER_ID,
             text=f"⏭️ Skipping {job_name}: previous run is still in progress.",
         )
         return
     async with lock:
-        await runner()
+        run_id = 0
+        try:
+            run_id = await start_job_run(job_name)
+        except Exception as log_err:
+            logger.error("Failed to start job run %s: %s", job_name, log_err)
+        try:
+            await runner()
+        except Exception as exc:
+            # Individual scheduled runners send their own Telegram error
+            # messages and re-raise so we can mark the run as errored here.
+            try:
+                await finish_job_run(run_id, status="error", error=f"{type(exc).__name__}: {exc}")
+            except Exception as log_err:
+                logger.error("Failed to finalize errored job %s: %s", job_name, log_err)
+            logger.error("Scheduled job %s errored: %s", job_name, exc)
+            return
+        try:
+            await finish_job_run(run_id, status="ok")
+        except Exception as log_err:
+            logger.error("Failed to finalize job %s: %s", job_name, log_err)
 
 
 async def _schedule_startup_catchup(application):
@@ -929,6 +958,7 @@ async def scheduled_triage(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=AUTHORIZED_USER_ID,
                 text=f"Morning triage failed: {e}"
             )
+            raise
 
     await _run_scheduled("inbox_triage", context, _runner)
 
@@ -950,6 +980,7 @@ async def scheduled_gmail_triage(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=AUTHORIZED_USER_ID,
                 text=f"Gmail triage failed: {e}"
             )
+            raise
 
     await _run_scheduled("gmail_triage", context, _runner)
 
@@ -971,6 +1002,7 @@ async def scheduled_investor_scan(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=AUTHORIZED_USER_ID,
                 text=f"Investor scan failed: {e}"
             )
+            raise
 
     await _run_scheduled("investor_scan", context, _runner)
 
@@ -990,6 +1022,7 @@ async def scheduled_action_nudges(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=AUTHORIZED_USER_ID,
                 text=f"Action nudges failed: {e}"
             )
+            raise
 
     await _run_scheduled("action_nudges", context, _runner)
 
@@ -1009,6 +1042,7 @@ async def scheduled_pool_nudge(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=AUTHORIZED_USER_ID,
                 text=f"Pool nudge check failed: {e}"
             )
+            raise
 
     await _run_scheduled("pool_nudge", context, _runner)
 
@@ -1028,6 +1062,7 @@ async def scheduled_home_maintenance(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=AUTHORIZED_USER_ID,
                 text=f"Home maintenance sync failed: {e}"
             )
+            raise
 
     await _run_scheduled("home_maintenance", context, _runner)
 
@@ -1050,6 +1085,7 @@ async def scheduled_daily_digest(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=AUTHORIZED_USER_ID,
                 text=f"Daily digest failed: {e}",
             )
+            raise
 
     await _run_scheduled("daily_digest", context, _runner)
 
@@ -1074,6 +1110,7 @@ async def scheduled_financial_sync(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=AUTHORIZED_USER_ID,
                 text=f"Financial sync failed: {e}"
             )
+            raise
 
     await _run_scheduled("financial_sync", context, _runner)
 
@@ -1099,6 +1136,7 @@ async def scheduled_weekly_finance_digest(context: ContextTypes.DEFAULT_TYPE):
                 chat_id=AUTHORIZED_USER_ID,
                 text=f"Weekly finance digest failed: {e}",
             )
+            raise
 
     await _run_scheduled("weekly_finance_digest", context, _runner)
 
