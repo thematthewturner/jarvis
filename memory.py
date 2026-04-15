@@ -58,9 +58,6 @@ async def init_db():
     from intentionality import init_intentionality_db
     await init_intentionality_db()
 
-    from investor_bot import init_investor_db
-    await init_investor_db()
-
     from jarvis_ops import init_ops_db
     await init_ops_db()
 

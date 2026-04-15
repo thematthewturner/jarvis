@@ -4177,7 +4177,6 @@
       box-shadow: var(--shadow-card);
     }
 
-    #view-investor .section-view,
     #view-inbox .section-view,
     #view-kids .section-view,
     #view-research .section-view,
@@ -4375,11 +4374,6 @@
         Finances
         <span class="nav-dot gold"></span>
       </button>
-      <button class="nav-item" onclick="nav('investor')" id="nav-investor">
-        <span class="nav-icon">▲</span>
-        Investor
-        <span class="nav-dot gold"></span>
-      </button>
       <button class="nav-item" onclick="nav('inbox')" id="nav-inbox">
         <span class="nav-icon">◉</span>
         Inbox
@@ -4529,18 +4523,6 @@
             <button class="tile-refresh" onclick="loadTile('finances')" title="Refresh">↻</button>
           </div>
           <div class="tile-body" id="tile-finances-body">
-            <div class="tile-skeleton"></div>
-            <div class="tile-skeleton"></div>
-          </div>
-        </div>
-
-        <div class="tile">
-          <div class="tile-header">
-            <div class="tile-icon gold">▲</div>
-            <span class="tile-name">Investor</span>
-            <button class="tile-refresh" onclick="loadTile('investor')" title="Refresh">↻</button>
-          </div>
-          <div class="tile-body" id="tile-investor-body">
             <div class="tile-skeleton"></div>
             <div class="tile-skeleton"></div>
           </div>
@@ -4766,112 +4748,6 @@
           </section>
         </div>
 
-      </div>
-    </div>
-
-
-    <!-- ── INVESTOR ──────────────────────── -->
-    <div class="view" id="view-investor">
-      <div class="section-view">
-        <div class="section-header">
-          <div class="section-big-icon gold">▲</div>
-          <div>
-            <div class="section-title">Investor</div>
-            <div class="section-desc">Convex options paper-trade scanner, bankroll tracking, and trade journal</div>
-          </div>
-        </div>
-
-        <div class="prompts-label" style="display:flex;align-items:center;justify-content:space-between">
-          <span>System State</span>
-          <button id="investor-run-btn" onclick="loadInvestorSection(true)"
-            style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer">
-            ↻ Run fresh scan
-          </button>
-        </div>
-        <div class="section-intel" id="investor-intel" style="margin-bottom:1.5rem">
-          <div class="intel-card">
-            <div class="intel-card-header">
-              <span class="intel-card-title">Market Regime</span>
-              <span class="intel-badge gold" id="badge-investor-regime">…</span>
-            </div>
-            <div class="intel-card-body" id="intel-investor-regime">
-              <div class="intel-loading"></div>
-              <div class="intel-loading" style="width:70%"></div>
-            </div>
-          </div>
-          <div class="intel-card">
-            <div class="intel-card-header">
-              <span class="intel-card-title">Play Of The Day</span>
-              <span class="intel-badge arc" id="badge-investor-play">…</span>
-            </div>
-            <div class="intel-card-body" id="intel-investor-play">
-              <div class="intel-loading"></div>
-              <div class="intel-loading" style="width:70%"></div>
-            </div>
-          </div>
-          <div class="intel-card">
-            <div class="intel-card-header">
-              <span class="intel-card-title">Portfolio Guardrails</span>
-              <span class="intel-badge green" id="badge-investor-bankroll">…</span>
-            </div>
-            <div class="intel-card-body" id="intel-investor-bankroll">
-              <div class="intel-loading"></div>
-              <div class="intel-loading" style="width:70%"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="prompts-label">Primary Setup</div>
-        <div id="investor-primary-play" style="margin-bottom:1.5rem">
-          <div class="intel-card" style="padding:14px 16px">
-            <div class="intel-loading"></div>
-            <div class="intel-loading" style="width:75%"></div>
-          </div>
-        </div>
-
-        <div class="prompts-label">Watchlist</div>
-        <div id="investor-watchlist" class="pool-history" style="margin-bottom:1.5rem">
-          <div style="padding:0.75rem 0.65rem">
-            <div class="intel-loading"></div>
-            <div class="intel-loading" style="width:80%"></div>
-          </div>
-        </div>
-
-        <div class="prompts-label">Open Positions</div>
-        <div id="investor-open-trades" class="pool-history" style="margin-bottom:1.5rem">
-          <div style="padding:0.75rem 0.65rem">
-            <div class="intel-loading"></div>
-            <div class="intel-loading" style="width:80%"></div>
-          </div>
-        </div>
-
-        <div class="prompts-label">Recent Closed</div>
-        <div id="investor-recent-closed" class="pool-history" style="margin-bottom:1.5rem">
-          <div style="padding:0.75rem 0.65rem">
-            <div class="intel-loading"></div>
-            <div class="intel-loading" style="width:80%"></div>
-          </div>
-        </div>
-
-        <div class="prompts-label">Edge Review</div>
-        <div id="investor-review" style="margin-bottom:1.5rem">
-          <div class="intel-card" style="padding:14px 16px">
-            <div class="intel-loading"></div>
-            <div class="intel-loading" style="width:65%"></div>
-          </div>
-        </div>
-
-        <div class="prompts-label">Quick Actions</div>
-        <div class="prompts-grid">
-          <button class="prompt-chip gold" onclick="loadInvestorSection(true)">Run fresh scan</button>
-          <button class="prompt-chip gold" onclick="askJarvis('/investor')">Investor scan</button>
-          <button class="prompt-chip gold" onclick="askJarvis('/investor status')">System status</button>
-          <button class="prompt-chip gold" onclick="askJarvis('/investor review')">Review last trades</button>
-          <button class="prompt-chip gold" onclick="askJarvis('What is today\'s investor play of the day?')">Ask Jarvis</button>
-          <button class="prompt-chip gold" onclick="askJarvis('/investor pause on')">Pause system</button>
-          <button class="prompt-chip gold" onclick="askJarvis('/investor pause off')">Resume system</button>
-          <button class="prompt-chip gold" onclick="askJarvis('/investor bankroll 2500')">Set bankroll 2500</button>
-        </div>
       </div>
     </div>
 
@@ -5257,7 +5133,7 @@
   const AUTO_REFRESH_MS = 120000;
   const CLOCK_UPDATE_MS = 30000;
   const THEME_KEY = 'jarvis-theme-v2';
-  const HOME_TILE_NAMES = ['tasks', 'home', 'calendar', 'finances', 'investor', 'research', 'pool', 'fitness'];
+  const HOME_TILE_NAMES = ['tasks', 'home', 'calendar', 'finances', 'research', 'pool', 'fitness'];
   const inFlight = new Set();
   const tileCache = {};
   const queueCache = { stars: [], tasks: [], finance: [] };
@@ -5276,7 +5152,7 @@
   }
 
   // ── Navigation ──────────────────────────────────────────────────────────────
-  const views = ['home', 'finances', 'investor', 'inbox', 'kids', 'pool', 'fitness', 'research', 'context', 'ops'];
+  const views = ['home', 'finances', 'inbox', 'kids', 'pool', 'fitness', 'research', 'context', 'ops'];
 
   function nav(target) {
     activeView = target;
@@ -5292,7 +5168,6 @@
     if (target !== 'home') toggleIntelPanel(false);
     if (target === 'home' && inputEl) inputEl.focus();
     if (target === 'home') loadActionQueue();
-    if (target === 'investor') loadInvestorSection();
     if (target === 'inbox')    { loadSection('inbox'); loadTriage(); }
     if (target === 'kids')     { loadSection('kids'); loadKidsDigest(); }
     if (target === 'pool')     loadSection('pool');
@@ -5315,33 +5190,6 @@
   }
 
   // ── Section Intel ────────────────────────────────────────────────────────────
-  async function loadInvestorSection(forceRun = false) {
-    const btn = document.getElementById('investor-run-btn');
-    await withLock('section:investor', async () => {
-      if (btn && forceRun) {
-        btn.disabled = true;
-        btn.textContent = '↻ Scanning…';
-      }
-      try {
-        const url = forceRun ? '/api/sections/investor/run' : '/api/sections/investor';
-        const res = await fetch(url, { method: forceRun ? 'POST' : 'GET' });
-        const data = await res.json();
-        renderSection('investor', data);
-        stampHudSync();
-      } catch {
-        const playWrap = document.getElementById('investor-primary-play');
-        if (playWrap) {
-          playWrap.innerHTML = '<div class="intel-card" style="padding:14px 16px"><div class="tile-error">// investor load failed</div></div>';
-        }
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = '↻ Run fresh scan';
-        }
-      }
-    });
-  }
-
   async function loadSection(name) {
     await withLock(`section:${name}`, async () => {
       try {
@@ -5354,196 +5202,6 @@
   }
 
   function renderSection(name, data) {
-    if (name === 'investor') {
-      const regime = data.regime_detail || {};
-      const rec = data.recommended || null;
-      const guard = data.guard || {};
-      const candidates = data.candidates || [];
-      const openTrades = data.open_positions || [];
-      const recentClosed = data.recent_closed || [];
-      const review = data.review || {};
-
-      const regimeBadge = document.getElementById('badge-investor-regime');
-      const playBadge = document.getElementById('badge-investor-play');
-      const bankrollBadge = document.getElementById('badge-investor-bankroll');
-      const regimeBody = document.getElementById('intel-investor-regime');
-      const playBody = document.getElementById('intel-investor-play');
-      const bankrollBody = document.getElementById('intel-investor-bankroll');
-      const primaryPlay = document.getElementById('investor-primary-play');
-      const watchlist = document.getElementById('investor-watchlist');
-      const openEl = document.getElementById('investor-open-trades');
-      const closedEl = document.getElementById('investor-recent-closed');
-      const reviewEl = document.getElementById('investor-review');
-
-      const fmtMoney = v => {
-        const n = Number(v || 0);
-        return new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: 'USD',
-          minimumFractionDigits: Math.abs(n) >= 100 ? 0 : 2,
-          maximumFractionDigits: Math.abs(n) >= 100 ? 0 : 2
-        }).format(n);
-      };
-      const fmtPct = v => `${Number(v || 0).toFixed(1)}%`;
-      const regimeName = String(data.regime || 'unknown').toUpperCase();
-      const regimeClass = data.regime === 'green' ? 'green' : data.regime === 'yellow' ? 'gold' : data.regime === 'red' ? 'red' : 'arc';
-
-      if (regimeBadge) {
-        regimeBadge.textContent = regimeName;
-        regimeBadge.className = `intel-badge ${regimeClass}`;
-      }
-      if (playBadge) {
-        playBadge.textContent = rec ? `${rec.symbol} ${rec.score}` : 'NO PLAY';
-        playBadge.className = `intel-badge ${rec ? (rec.confidence === 'high' ? 'green' : rec.confidence === 'medium' ? 'gold' : 'arc') : 'arc'}`;
-      }
-      if (bankrollBadge) {
-        bankrollBadge.textContent = fmtMoney(data.bankroll);
-        bankrollBadge.className = `intel-badge ${guard.paused ? 'red' : 'green'}`;
-      }
-
-      if (regimeBody) {
-        const rows = [
-          ['SPY 20d slope', fmtPct(regime.spy_slope_pct)],
-          ['VIX', `${Number(regime.vix_level || 0).toFixed(1)} (${regime.vix_bucket || 'n/a'})`],
-          ['Breadth', fmtPct(regime.breadth)],
-          ['Term structure', String(regime.term_structure || 'n/a')],
-          ['Credit', String(regime.credit_trend || 'n/a')],
-        ];
-        regimeBody.innerHTML = '<div class="intel-items">' + rows.map(([l, r]) =>
-          `<div class="intel-item"><span class="intel-item-left">${escapeHtml(l)}</span><span class="intel-item-right">${escapeHtml(r)}</span></div>`
-        ).join('') + '</div>';
-      }
-
-      if (playBody) {
-        const bodyRows = rec ? [
-          ['Setup', truncate(rec.setup || '', 34)],
-          ['Type', `${rec.play_type || 'n/a'} · ${rec.confidence || 'n/a'}`],
-          ['Entry', rec.entry_price != null ? `$${Number(rec.entry_price).toFixed(2)}` : '—'],
-          ['Risk budget', rec.risk_budget != null ? fmtMoney(rec.risk_budget) : '—'],
-        ] : [
-          ['Status', 'Cash only'],
-          ['Reason', 'No setup cleared the gate'],
-        ];
-        playBody.innerHTML = '<div class="intel-items">' + bodyRows.map(([l, r]) =>
-          `<div class="intel-item"><span class="intel-item-left">${escapeHtml(l)}</span><span class="intel-item-right">${escapeHtml(r)}</span></div>`
-        ).join('') + '</div>';
-      }
-
-      if (bankrollBody) {
-        const bodyRows = [
-          ['Open risk', String(guard.open_positions || 0)],
-          ['Weekly P&L', fmtMoney(guard.weekly_pnl)],
-          ['Monthly P&L', fmtMoney(guard.monthly_pnl)],
-          ['Loss streak', String(guard.consecutive_losses || 0)],
-          ['Gate', guard.paused ? `PAUSED · ${guard.pause_reason || 'risk stop'}` : 'ACTIVE'],
-        ];
-        bankrollBody.innerHTML = '<div class="intel-items">' + bodyRows.map(([l, r]) =>
-          `<div class="intel-item"><span class="intel-item-left">${escapeHtml(l)}</span><span class="intel-item-right">${escapeHtml(r)}</span></div>`
-        ).join('') + '</div>';
-      }
-
-      if (primaryPlay) {
-        if (!rec) {
-          primaryPlay.innerHTML = '<div class="intel-card" style="padding:14px 16px"><div class="intel-empty">No play today. Regime and score gate kept the system in cash.</div></div>';
-        } else {
-          const contract = rec.contract || {};
-          const notes = (rec.notes || []).slice(0, 4);
-          primaryPlay.innerHTML =
-            `<div class="intel-card" style="padding:14px 16px">` +
-              `<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px">` +
-                `<div>` +
-                  `<div style="font-size:15px;font-weight:700">${escapeHtml(rec.symbol)} <span style="color:var(--dim);font-size:11px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.08em">${escapeHtml(rec.play_type)}</span></div>` +
-                  `<div style="font-size:12px;color:var(--muted);margin-top:4px">${escapeHtml(rec.setup || '')}</div>` +
-                `</div>` +
-                `<div style="text-align:right;flex-shrink:0">` +
-                  `<div style="font-size:22px;font-weight:700;color:var(--gold)">${escapeHtml(String(rec.score))}</div>` +
-                  `<div style="font-size:10px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase">score</div>` +
-                `</div>` +
-              `</div>` +
-              `<div class="intel-items">` +
-                `<div class="intel-item"><span class="intel-item-left">Contract</span><span class="intel-item-right">${escapeHtml(contract.label || '—')}</span></div>` +
-                `<div class="intel-item"><span class="intel-item-left">Est. cost</span><span class="intel-item-right">${escapeHtml(contract.contract_cost != null ? fmtMoney(contract.contract_cost) : '—')}</span></div>` +
-                `<div class="intel-item"><span class="intel-item-left">Delta</span><span class="intel-item-right">${escapeHtml(contract.delta != null ? Number(contract.delta).toFixed(2) : '—')}</span></div>` +
-                `<div class="intel-item"><span class="intel-item-left">Target / stop</span><span class="intel-item-right">${escapeHtml(`$${Number(rec.first_target || 0).toFixed(2)} / $${Number(rec.hard_stop || 0).toFixed(2)}`)}</span></div>` +
-              `</div>` +
-              (notes.length
-                ? `<div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px">${notes.map(n =>
-                    `<div style="font-size:11px;color:var(--muted);padding:2px 0">• ${escapeHtml(n)}</div>`
-                  ).join('')}</div>`
-                : '') +
-            `</div>`;
-        }
-      }
-
-      if (watchlist) {
-        if (!candidates.length) {
-          watchlist.innerHTML = '<div style="padding:0.65rem"><div class="intel-empty">No watchlist candidates from the latest scan.</div></div>';
-        } else {
-          const head = '<tr><th>Ticker</th><th>Type</th><th>Score</th><th>Setup</th></tr>';
-          const rows = candidates.map(c =>
-            `<tr>` +
-              `<td style="font-family:var(--font-mono);color:var(--gold)">${escapeHtml(c.symbol)}</td>` +
-              `<td>${escapeHtml(c.play_type)}</td>` +
-              `<td style="color:${Number(c.score || 0) >= 7 ? 'var(--green)' : 'var(--gold)'}">${escapeHtml(String(c.score))}</td>` +
-              `<td>${escapeHtml(truncate(c.setup || '', 56))}</td>` +
-            `</tr>`
-          ).join('');
-          watchlist.innerHTML = `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`;
-        }
-      }
-
-      if (openEl) {
-        if (!openTrades.length) {
-          openEl.innerHTML = '<div style="padding:0.65rem"><div class="intel-empty">No open investor positions.</div></div>';
-        } else {
-          const head = '<tr><th>Ticker</th><th>Option</th><th>Entry</th><th>Qty</th><th>Score</th></tr>';
-          const rows = openTrades.map(t =>
-            `<tr>` +
-              `<td style="font-family:var(--font-mono);color:var(--gold)">${escapeHtml(t.ticker)}</td>` +
-              `<td>${escapeHtml(truncate(t.option_desc || '', 34))}</td>` +
-              `<td>${escapeHtml(`$${Number(t.entry_price || 0).toFixed(2)}`)}</td>` +
-              `<td>${escapeHtml(String(t.quantity || 1))}</td>` +
-              `<td>${escapeHtml(t.score != null ? String(t.score) : '—')}</td>` +
-            `</tr>`
-          ).join('');
-          openEl.innerHTML = `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`;
-        }
-      }
-
-      if (closedEl) {
-        if (!recentClosed.length) {
-          closedEl.innerHTML = '<div style="padding:0.65rem"><div class="intel-empty">No closed trades logged yet.</div></div>';
-        } else {
-          const head = '<tr><th>Ticker</th><th>Play</th><th>Exit</th><th>P&amp;L</th><th>Reason</th></tr>';
-          const rows = recentClosed.map(t => {
-            const pnl = Number(t.pnl || 0);
-            return (
-              `<tr>` +
-                `<td style="font-family:var(--font-mono);color:var(--gold)">${escapeHtml(t.ticker)}</td>` +
-                `<td>${escapeHtml(t.play_type || '—')}</td>` +
-                `<td>${escapeHtml(`$${Number(t.exit_price || 0).toFixed(2)}`)}</td>` +
-                `<td style="color:${pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--muted)'}">${escapeHtml(fmtMoney(pnl))}</td>` +
-                `<td>${escapeHtml(t.exit_reason || 'manual')}</td>` +
-              `</tr>`
-            );
-          }).join('');
-          closedEl.innerHTML = `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`;
-        }
-      }
-
-      if (reviewEl) {
-        reviewEl.innerHTML =
-          `<div class="intel-card" style="padding:14px 16px">` +
-            `<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">` +
-              `<div><div style="font-size:10px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase">Closed</div><div style="font-size:18px;font-weight:700">${escapeHtml(String(review.closed_count || 0))}</div></div>` +
-              `<div><div style="font-size:10px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase">Win Rate</div><div style="font-size:18px;font-weight:700;color:var(--green)">${escapeHtml(fmtPct(review.win_rate || 0))}</div></div>` +
-              `<div><div style="font-size:10px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase">Avg Win</div><div style="font-size:18px;font-weight:700;color:var(--gold)">${escapeHtml(fmtMoney(review.avg_win || 0))}</div></div>` +
-              `<div><div style="font-size:10px;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase">Expectancy</div><div style="font-size:18px;font-weight:700;color:${Number(review.expectancy || 0) >= 0 ? 'var(--green)' : 'var(--red)'}">${escapeHtml(fmtMoney(review.expectancy || 0))}</div></div>` +
-            `</div>` +
-          `</div>`;
-      }
-    }
-
     if (name === 'inbox') {
       const ic    = data.icloud || {};
       const tasks = data.tasks  || {};
@@ -7219,28 +6877,6 @@
       if (lines.length) html += '<div class="tile-lines">' + lines.join('') + '</div>';
       body.innerHTML = html;
 
-    } else if (name === 'investor') {
-      const regime = String(data.regime || 'unknown').toUpperCase();
-      const paused = Boolean(data.paused);
-      const ticker = data.recommended_ticker;
-      const score = data.recommended_score;
-      const bankroll = data.bankroll;
-      const color = data.regime === 'green' ? 'green' : data.regime === 'yellow' ? 'gold' : data.regime === 'red' ? 'red' : 'arc';
-
-      let html = `<div class="tile-count ${color}">${escapeHtml(regime)}</div>`;
-      html += `<div class="tile-sublabel">${ticker ? 'play loaded' : paused ? 'system paused' : 'no play today'}</div>`;
-      const lines = [];
-      if (ticker) {
-        lines.push(`<div class="tile-line"><strong>${escapeHtml(ticker)}</strong><span>${escapeHtml(`${data.play_type || 'setup'} · ${Number(score || 0).toFixed(1)}/10`)}</span></div>`);
-      } else if (data.pause_reason) {
-        lines.push(`<div class="tile-line"><span style="color:var(--dim);flex-shrink:0;font-family:var(--font-mono);font-size:0.65rem">||</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:0.35rem">${escapeHtml(truncate(data.pause_reason, 40))}</span></div>`);
-      }
-      if (bankroll != null) {
-        lines.push(`<div class="tile-line"><span style="color:var(--dim);flex-shrink:0;font-family:var(--font-mono);font-size:0.65rem">BK</span><span style="flex:1;color:var(--muted);font-family:var(--font-mono);font-size:0.65rem;text-align:right">${escapeHtml(`$${Number(bankroll).toLocaleString('en-US', { maximumFractionDigits: 0 })}`)}</span></div>`);
-      }
-      if (lines.length) html += '<div class="tile-lines">' + lines.join('') + '</div>';
-      body.innerHTML = html;
-
     } else if (name === 'research') {
       const count = data.count || 0;
       const items = data.items || [];
@@ -7353,9 +6989,6 @@
     const scheduleCount = Number((tileCache.calendar?.items || []).length);
     const recovery = tileCache.fitness?.recovery_score;
     const poolScore = tileCache.pool?.score;
-    const investorTicker = tileCache.investor?.recommended_ticker;
-    const investorRegime = String(tileCache.investor?.regime || 'unknown').toUpperCase();
-    const investorScore = tileCache.investor?.recommended_score;
 
     const cards = [
       {
@@ -7384,15 +7017,6 @@
         value: `${financeCount}`,
         meta: firstFinance ? `${truncate(firstFinance.merchant || 'Recent spend', 22)} ${firstFinance.amount || ''}` : 'No recent transaction watch items',
         foot: 'This week',
-      },
-      {
-        target: 'investor',
-        label: 'Investor',
-        icon: '▲',
-        tone: tileCache.investor?.regime === 'green' ? 'green' : tileCache.investor?.regime === 'yellow' ? 'gold' : tileCache.investor?.regime === 'red' ? 'red' : 'arc',
-        value: investorTicker ? truncate(investorTicker, 10) : investorRegime,
-        meta: investorTicker ? `${tileCache.investor?.play_type || 'setup'} · ${Number(investorScore || 0).toFixed(1)}/10` : (tileCache.investor?.paused ? 'System paused' : 'No active setup'),
-        foot: 'Market regime',
       },
       {
         target: 'fitness',
@@ -7511,10 +7135,6 @@
     if (document.hidden) return;
     if (activeView === 'home') {
       await Promise.all([refreshHomeTiles(true), loadActionQueue()]);
-      return;
-    }
-    if (activeView === 'investor') {
-      await Promise.all([loadInvestorSection(false), loadTile('investor', { silent: true })]);
       return;
     }
     if (activeView === 'inbox') {

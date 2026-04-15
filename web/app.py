@@ -125,7 +125,6 @@ async def _run_web_slash_command(user_message: str) -> str | None:
             "/action_nudges\n"
             "/pool_nudge\n"
             "/nudges\n"
-            "/investor [refresh|status|fill|close|skip|review|pause|bankroll]\n"
             "/intentionality (or /i) [set|note|study|source|rhythm|done|nudge]\n"
             "/home [status|check|add|info|done]\n"
             "/pool [status|report|history|log|add|sync|orders|debug|omni_debug]"
@@ -264,74 +263,6 @@ async def _run_web_slash_command(user_message: str) -> str | None:
         action_text = await run_daily_email_action_nudges(notify_empty=True)
         pool_text = await run_weekly_pool_nudge(force=True, notify_empty=True)
         return "\n\n".join([t for t in [action_text, pool_text] if t]) or "No nudges to create right now."
-
-    if cmd == "/investor":
-        from investor_bot import (
-            format_investor_status,
-            get_trade_review,
-            log_trade_close,
-            log_trade_fill,
-            mark_trade_skipped,
-            run_investor_scan,
-            set_bankroll_amount,
-            set_investor_pause,
-        )
-
-        sub = args[0].lower() if args else "scan"
-        usage = (
-            "Investor commands:\n"
-            "/investor\n"
-            "/investor refresh\n"
-            "/investor status\n"
-            "/investor fill <ticker> <entry_price> [qty]\n"
-            "/investor close <ticker> <exit_price> [reason]\n"
-            "/investor skip\n"
-            "/investor review\n"
-            "/investor pause [on|off]\n"
-            "/investor bankroll <amount>"
-        )
-
-        try:
-            if sub in ("scan", "today", ""):
-                return await run_investor_scan(force_refresh=False, notify_when_no_play=True)
-
-            if sub in ("refresh", "rescan", "run"):
-                return await run_investor_scan(force_refresh=True, notify_when_no_play=True)
-
-            if sub == "status":
-                return await format_investor_status()
-
-            if sub == "fill":
-                if len(args) < 3:
-                    return usage
-                quantity = int(args[3]) if len(args) > 3 and args[3].isdigit() else 1
-                return await log_trade_fill(args[1], float(args[2]), quantity=quantity)
-
-            if sub == "close":
-                if len(args) < 3:
-                    return usage
-                reason = " ".join(args[3:]).strip() or "manual"
-                return await log_trade_close(args[1], float(args[2]), exit_reason=reason)
-
-            if sub == "skip":
-                return await mark_trade_skipped()
-
-            if sub == "review":
-                return await get_trade_review()
-
-            if sub == "pause":
-                if len(args) < 2:
-                    return usage
-                return await set_investor_pause(args[1].lower() in {"on", "true", "1", "yes"})
-
-            if sub == "bankroll":
-                if len(args) < 2:
-                    return usage
-                return await set_bankroll_amount(float(args[1]))
-        except ValueError as e:
-            return f"Investor command error: {e}\n\n{usage}"
-
-        return usage
 
     if cmd in {"/intentionality", "/i"}:
         from intentionality import (
@@ -890,30 +821,6 @@ def tiles_research():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/tiles/investor")
-@login_required
-def tiles_investor():
-    """Home tile: investor regime + top setup snapshot."""
-    try:
-        from investor_bot import get_investor_dashboard
-        dashboard = asyncio.run(get_investor_dashboard(force_refresh=False))
-        rec = dashboard.get("recommended") or {}
-        guard = dashboard.get("guard") or {}
-        return jsonify({
-            "regime": dashboard.get("regime"),
-            "recommended_ticker": rec.get("symbol"),
-            "recommended_score": rec.get("score"),
-            "play_type": rec.get("play_type"),
-            "confidence": rec.get("confidence"),
-            "paused": bool(guard.get("paused")),
-            "pause_reason": guard.get("pause_reason"),
-            "bankroll": dashboard.get("bankroll"),
-            "scan_date": dashboard.get("scan_date"),
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 def _parse_balances(result: str) -> dict:
     """Shared balance parser for finances section."""
     net_worth = None
@@ -1171,28 +1078,6 @@ def section_finances():
     """Finances section page: balances + cached spend analytics."""
     try:
         return jsonify(_build_finances_payload(force_backfill=False))
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/sections/investor")
-@login_required
-def section_investor():
-    try:
-        from investor_bot import get_investor_dashboard
-        dashboard = asyncio.run(get_investor_dashboard(force_refresh=False))
-        return jsonify(dashboard)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/sections/investor/run", methods=["POST"])
-@login_required
-def run_investor_section():
-    try:
-        from investor_bot import get_investor_dashboard
-        dashboard = asyncio.run(get_investor_dashboard(force_refresh=True))
-        return jsonify(dashboard)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

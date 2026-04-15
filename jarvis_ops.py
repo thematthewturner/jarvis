@@ -74,15 +74,6 @@ SKILLS = [
         "modules": ["finance_inbox.py", "google_services.py"],
     },
     {
-        "id": "investor",
-        "name": "Investor",
-        "category": "Markets",
-        "summary": "Run a deterministic convex options scanner with a lightweight AI overlay and paper-trade workflow.",
-        "commands": ["/investor"],
-        "surfaces": ["telegram", "web"],
-        "modules": ["investor_bot.py"],
-    },
-    {
         "id": "fitness",
         "name": "Fitness",
         "category": "Health",
@@ -302,7 +293,6 @@ async def compute_digest_source_signature(prefs: dict, now: datetime | None = No
         "research_pref_latest": await _safe_scalar("SELECT MAX(updated_at) FROM research_preferences") if await _table_exists("research_preferences") else "",
         "research_seen_latest": await _safe_scalar("SELECT MAX(last_reported_at) FROM research_seen_items") if await _table_exists("research_seen_items") else "",
         "intentionality_latest": await _safe_scalar("SELECT MAX(updated_at) FROM intentionality_entries") if await _table_exists("intentionality_entries") else "",
-        "investor_scan_latest": await _safe_scalar("SELECT MAX(created_at) FROM daily_scans") if await _table_exists("daily_scans") else "",
         "finance_sync_latest": await _safe_scalar(
             "SELECT MAX(updated_at) FROM financial_sync_state"
         ) if await _table_exists("financial_sync_state") else "",
@@ -616,7 +606,6 @@ KNOWN_SCHEDULED_JOBS = [
     "daily_digest",
     "inbox_triage",
     "gmail_triage",
-    "investor_scan",
     "action_nudges",
     "pool_nudge",
     "home_maintenance",

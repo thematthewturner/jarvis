@@ -21,7 +21,6 @@ Be direct and actionable. No fluff. Structure it clearly:
 - Calendar: one combined schedule from Google and iCloud, times + event names only
 - Email: only items needing action (skip newsletters/automated)
 - Tasks: prioritized list
-- Investor: one sentence on the highest-conviction paper-trade setup or explicitly say no play
 - One sentence on what to tackle first
 
 Use plain text. No markdown headers with #. Use emoji sparingly for section breaks."""
@@ -101,7 +100,6 @@ async def generate_briefing() -> tuple[str, str]:
     """
     from google_services import get_calendar_events, get_emails
     from icloud_calendar import get_todays_events
-    from investor_bot import get_investor_briefing_text
     from intentionality import generate_digest_nudge
     from tools import _get_tasks_sync
 
@@ -109,13 +107,12 @@ async def generate_briefing() -> tuple[str, str]:
     date_label = now.strftime("%A, %B %d, %Y")
 
     # Fetch daily context concurrently, including both calendar systems.
-    google_calendar_result, icloud_calendar_result, email_result, tasks_result, intentionality_result, investor_result = await asyncio.gather(
+    google_calendar_result, icloud_calendar_result, email_result, tasks_result, intentionality_result = await asyncio.gather(
         get_calendar_events({"date": "today"}),
         get_todays_events(),
         get_emails({"query": "is:unread", "max_results": 10}),
         asyncio.to_thread(_get_tasks_sync, "today | overdue"),
         generate_digest_nudge(),
-        get_investor_briefing_text(),
         return_exceptions=True,
     )
 
@@ -130,7 +127,6 @@ async def generate_briefing() -> tuple[str, str]:
     email_data = safe(email_result, "email")
     tasks_data = safe(tasks_result, "tasks")
     intentionality_data = safe(intentionality_result, "intentionality")
-    investor_data = safe(investor_result, "investor")
     calendar_data = _build_calendar_context(
         google_calendar_data if isinstance(google_calendar_data, str) else "",
         icloud_calendar_data if isinstance(icloud_calendar_data, list) else [],
@@ -147,9 +143,6 @@ UNREAD EMAIL:
 TASKS (today + overdue):
 {tasks_data}
 
-INVESTOR:
-{investor_data}
-
 Generate Matt's morning briefing."""
 
     briefing_text = await complete_text(
@@ -160,8 +153,6 @@ Generate Matt's morning briefing."""
     )
     if intentionality_data and not str(intentionality_data).startswith("(intentionality unavailable)"):
         briefing_text = f"{briefing_text}\n\n🧠 Intentionality\n{intentionality_data}"
-    if investor_data and not str(investor_data).startswith("(investor unavailable)"):
-        briefing_text = f"{briefing_text}\n\n📈 Investor\n{investor_data}"
     notion_title = f"Morning Briefing — {now.strftime('%b %d, %Y')}"
 
     return briefing_text, notion_title

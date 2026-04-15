@@ -26,7 +26,6 @@ SCHEDULED_JOB_LOCKS = {
     "daily_digest": asyncio.Lock(),
     "inbox_triage": asyncio.Lock(),
     "gmail_triage": asyncio.Lock(),
-    "investor_scan": asyncio.Lock(),
     "action_nudges": asyncio.Lock(),
     "pool_nudge": asyncio.Lock(),
     "home_maintenance": asyncio.Lock(),
@@ -84,7 +83,6 @@ async def _schedule_startup_catchup(application):
         ("daily_digest", 6, 45, 120, scheduled_daily_digest),
         ("inbox_triage", 7, 0, 90, scheduled_triage),
         ("gmail_triage", 7, 15, 90, scheduled_gmail_triage),
-        ("investor_scan", 7, 30, 120, scheduled_investor_scan),
         ("action_nudges", 7, 35, 120, scheduled_action_nudges),
         ("home_maintenance", 8, 5, 120, scheduled_home_maintenance),
     ]
@@ -305,85 +303,6 @@ async def research_topic_command(update: Update, context: ContextTypes.DEFAULT_T
     except Exception as e:
         logger.error(f"Research topic command error: {e}")
         await update.message.reply_text(f"Research topic update failed: {e}")
-
-
-@authorized_only
-async def investor_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Run/manage the daily investor paper-trade scanner."""
-    args = context.args or []
-    sub = args[0].lower() if args else "scan"
-    usage = (
-        "Investor commands:\n"
-        "/investor — today's investor scan\n"
-        "/investor refresh — force a fresh scan\n"
-        "/investor status\n"
-        "/investor fill <ticker> <entry_price> [qty]\n"
-        "/investor close <ticker> <exit_price> [reason]\n"
-        "/investor skip\n"
-        "/investor review\n"
-        "/investor pause [on|off]\n"
-        "/investor bankroll <amount>"
-    )
-
-    try:
-        from investor_bot import (
-            format_investor_status,
-            get_trade_review,
-            log_trade_close,
-            log_trade_fill,
-            mark_trade_skipped,
-            run_investor_scan,
-            set_bankroll_amount,
-            set_investor_pause,
-        )
-
-        await update.message.chat.send_action("typing")
-
-        if sub in ("scan", "today", ""):
-            text = await run_investor_scan(force_refresh=False, notify_when_no_play=True)
-        elif sub in ("refresh", "rescan", "run"):
-            text = await run_investor_scan(force_refresh=True, notify_when_no_play=True)
-        elif sub == "status":
-            text = await format_investor_status()
-        elif sub == "fill":
-            if len(args) < 3:
-                await update.message.reply_text(usage)
-                return
-            quantity = int(args[3]) if len(args) > 3 and args[3].isdigit() else 1
-            text = await log_trade_fill(args[1], float(args[2]), quantity=quantity)
-        elif sub == "close":
-            if len(args) < 3:
-                await update.message.reply_text(usage)
-                return
-            reason = " ".join(args[3:]).strip() or "manual"
-            text = await log_trade_close(args[1], float(args[2]), exit_reason=reason)
-        elif sub == "skip":
-            text = await mark_trade_skipped()
-        elif sub == "review":
-            text = await get_trade_review()
-        elif sub == "pause":
-            if len(args) < 2:
-                await update.message.reply_text(usage)
-                return
-            text = await set_investor_pause(args[1].lower() in {"on", "true", "1", "yes"})
-        elif sub == "bankroll":
-            if len(args) < 2:
-                await update.message.reply_text(usage)
-                return
-            text = await set_bankroll_amount(float(args[1]))
-        else:
-            text = usage
-
-        if len(text) <= 4096:
-            await update.message.reply_text(text)
-        else:
-            for i in range(0, len(text), 4096):
-                await update.message.reply_text(text[i:i+4096])
-    except ValueError as e:
-        await update.message.reply_text(f"Investor command error: {e}\n\n{usage}")
-    except Exception as e:
-        logger.error(f"Investor command error: {e}")
-        await update.message.reply_text(f"Investor command failed: {e}")
 
 
 @authorized_only
@@ -985,28 +904,6 @@ async def scheduled_gmail_triage(context: ContextTypes.DEFAULT_TYPE):
     await _run_scheduled("gmail_triage", context, _runner)
 
 
-async def scheduled_investor_scan(context: ContextTypes.DEFAULT_TYPE):
-    """Scheduled daily investor paper-trade scan."""
-    async def _runner():
-        logger.info("Running scheduled investor scan")
-        try:
-            from investor_bot import run_investor_scan
-            text = await run_investor_scan(force_refresh=True, notify_when_no_play=False)
-            if text:
-                await context.bot.send_message(chat_id=AUTHORIZED_USER_ID, text=text)
-            else:
-                logger.info("Scheduled investor scan: no new play; skipping Telegram send.")
-        except Exception as e:
-            logger.error(f"Scheduled investor scan error: {e}")
-            await context.bot.send_message(
-                chat_id=AUTHORIZED_USER_ID,
-                text=f"Investor scan failed: {e}"
-            )
-            raise
-
-    await _run_scheduled("investor_scan", context, _runner)
-
-
 async def scheduled_action_nudges(context: ContextTypes.DEFAULT_TYPE):
     """Scheduled daily email and intentionality Todoist nudges."""
     async def _runner():
@@ -1169,7 +1066,6 @@ def main():
     app.add_handler(CommandHandler("briefing", briefing_command))
     app.add_handler(CommandHandler("family_calendar", family_calendar_command))
     app.add_handler(CommandHandler("kids_digest", kids_digest_command))
-    app.add_handler(CommandHandler("investor", investor_command))
     app.add_handler(CommandHandler("research", research_command))
     app.add_handler(CommandHandler("research_topic", research_topic_command))
     app.add_handler(CommandHandler("finance_sync", finance_sync_command))
@@ -1220,14 +1116,6 @@ def main():
         scheduled_daily_digest,
         time=time(hour=6, minute=45, tzinfo=ET),
         name="daily_digest",
-        job_kwargs=SCHEDULED_JOB_KWARGS,
-    )
-
-    # Daily investor scan at 7:30 AM ET
-    app.job_queue.run_daily(
-        scheduled_investor_scan,
-        time=time(hour=7, minute=30, tzinfo=ET),
-        name="investor_scan",
         job_kwargs=SCHEDULED_JOB_KWARGS,
     )
 

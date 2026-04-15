@@ -39,8 +39,6 @@ def _build_handlers() -> dict:
         "read_notion_page": read_notion_page,
         "save_intentionality_signal": save_intentionality_signal_tool,
         "get_intentionality_status": get_intentionality_status_tool,
-        "get_investor_play": get_investor_play_tool,
-        "get_investor_status": get_investor_status_tool,
         "get_account_balances": get_account_balances,
         "get_recent_transactions": get_recent_transactions,
         "get_budget_summary": get_budget_summary,
@@ -182,18 +180,6 @@ async def get_intentionality_status_tool(input: dict) -> str:
     from intentionality import format_intentionality_status
 
     return await format_intentionality_status()
-
-
-async def get_investor_play_tool(input: dict) -> str:
-    from investor_bot import run_investor_scan
-
-    return await run_investor_scan(force_refresh=bool(input.get("refresh", False)), notify_when_no_play=True)
-
-
-async def get_investor_status_tool(input: dict) -> str:
-    from investor_bot import format_investor_status
-
-    return await format_investor_status()
 
 
 # ── Google ────────────────────────────────────────────────────────────────────

@@ -45,9 +45,6 @@ Your tools — use them immediately without asking:
 - Intentionality: save_intentionality_signal, get_intentionality_status
   → When Matt shares a long-lived theme, scripture anchor, book, fatherhood focus, or recurring personal practice he wants held over time → call save_intentionality_signal immediately
   → When Matt asks what intentionality Jarvis is holding → call get_intentionality_status immediately
-- Investor: get_investor_play, get_investor_status
-  → When Matt asks for today's convex setup, investor idea, or play of the day → call get_investor_play immediately
-  → When Matt asks for bankroll, trading status, or investor system state → call get_investor_status immediately
 
 Rules:
 - NEVER say you lack access to iCloud — you have full iCloud access via the tools above
@@ -122,27 +119,6 @@ TOOLS = [
                 }
             },
             "required": ["signal_type", "content"]
-        }
-    },
-    {
-        "name": "get_investor_play",
-        "description": "Run or fetch today's investor paper-trade scan and return the highest-conviction convex setup, including no-trade days when nothing clears the gate.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "refresh": {
-                    "type": "boolean",
-                    "description": "If true, force a fresh scan instead of using today's cached result."
-                }
-            }
-        }
-    },
-    {
-        "name": "get_investor_status",
-        "description": "Show the investor bot's current bankroll, pause state, open positions, and latest scan status.",
-        "input_schema": {
-            "type": "object",
-            "properties": {}
         }
     },
     {

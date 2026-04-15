@@ -50,13 +50,6 @@ Each skill should have:
 - Surfaces: Telegram, web, Google Drive, Notion
 - Modules: `finance_inbox.py`, `google_services.py`
 
-### Investor
-
-- Purpose: Run the paper-trade scanner and manage the daily play workflow.
-- Commands: `/investor`
-- Surfaces: Telegram, web
-- Modules: `investor_bot.py`
-
 ### Fitness
 
 - Purpose: Sync WHOOP readiness and track PRs and workouts.

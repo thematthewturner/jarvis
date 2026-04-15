@@ -31,7 +31,6 @@ Current areas include:
 - Action Nudges
 - Finance Console
 - Finance Inbox
-- Investor
 - Fitness
 - Pool Ops
 - Home Ops
