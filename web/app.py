@@ -105,6 +105,7 @@ async def _run_web_slash_command(user_message: str) -> str | None:
     if cmd == "/help":
         return (
             "Commands:\n"
+            "/morning_brief\n"
             "/skills\n"
             "/daily_digest\n"
             "/briefing\n"
@@ -129,6 +130,11 @@ async def _run_web_slash_command(user_message: str) -> str | None:
             "/home [status|check|add|info|done]\n"
             "/pool [status|report|history|log|add|sync|orders|debug|omni_debug]"
         )
+
+    if cmd == "/morning_brief":
+        from morning_brief import run_morning_brief
+        result = await run_morning_brief()
+        return result.get("text", "Morning brief complete.")
 
     if cmd == "/briefing":
         from briefing import run_briefing
@@ -1078,6 +1084,22 @@ def section_finances():
     """Finances section page: balances + cached spend analytics."""
     try:
         return jsonify(_build_finances_payload(force_backfill=False))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/sections/morning_brief/run", methods=["POST"])
+@login_required
+def run_morning_brief_section():
+    """Trigger the full morning brief from the web dashboard."""
+    try:
+        from morning_brief import run_morning_brief
+        result = asyncio.run(run_morning_brief())
+        return jsonify({
+            "text": result.get("text", ""),
+            "sections": result.get("sections", {}),
+            "generated_at": result.get("generated_at", ""),
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

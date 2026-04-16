@@ -35,3 +35,10 @@ notes, finance, fitness, pool, and home ops.
 ## Skills Discipline
 New features should extend an existing skill in `JARVIS_SKILLS.md` rather than become
 one-off scripts. Each skill needs a clear job, a visible health status, and a low-noise contract.
+
+## Morning Notification Rule
+All morning notifications flow through `morning_brief.run_morning_brief()` — do NOT add new
+standalone `scheduled_*` jobs that send their own Telegram messages in the morning window.
+To add a new morning section: add a runner coroutine to `morning_brief.py`, register its name
+in `SECTION_RUNNERS`, add a label to `SECTION_LABELS`, and add it to `DEFAULT_PREFERENCES
+["morning_brief_enabled_sections"]` in `jarvis_ops.py`.

@@ -17,10 +17,11 @@ Each skill should have:
 
 ### Daily Digest
 
-- Purpose: Assemble one morning digest from briefing, kids/school email, and research.
-- Commands: `/daily_digest`, `/briefing`, `/research`, `/kids_digest`
+- Purpose: Assemble one unified morning brief — digest (briefing + kids + research) plus iCloud triage, Gmail triage, action nudges, home maintenance, and pool nudge — sent as a single Telegram message and saved to Notion.
+- Commands: `/morning_brief`, `/daily_digest`, `/briefing`, `/research`, `/kids_digest`
 - Surfaces: Telegram, web, Notion
-- Modules: `daily_digest.py`, `briefing.py`, `daily_research.py`, `kids_digest.py`
+- Modules: `morning_brief.py`, `daily_digest.py`, `briefing.py`, `daily_research.py`, `kids_digest.py`
+- Scheduled: one job at 06:45 ET (`morning_brief`); silent pre-warm at 04:40 (`financial_sync`)
 
 ### Inbox Triage
 

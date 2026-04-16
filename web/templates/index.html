@@ -5109,7 +5109,8 @@
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1rem">
           <button class="home-hero-btn" onclick="loadOpsDashboard(false)">Refresh</button>
           <button class="home-hero-btn" onclick="loadOpsDashboard(true)">Live Health</button>
-          <button class="home-hero-btn primary" onclick="runDailyDigestNow()">Run Daily Digest</button>
+          <button class="home-hero-btn primary" onclick="runMorningBriefNow()">Run Morning Brief</button>
+          <button class="home-hero-btn" onclick="runDailyDigestNow()">Run Daily Digest</button>
         </div>
         <div id="ops-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0.9rem">
           <div class="intel-loading" style="height:120px;border-radius:10px"></div>
@@ -6519,6 +6520,19 @@
       }).join('');
       stampHudSync();
     } catch { el.innerHTML = '<div class="tile-error">// failed to load context</div>'; }
+  }
+
+  async function runMorningBriefNow() {
+    const wrap = document.getElementById('ops-wrap');
+    if (!wrap) return;
+    try {
+      const res = await fetch('/api/sections/morning_brief/run', { method: 'POST' });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      await loadOpsDashboard(false);
+    } catch (e) {
+      wrap.innerHTML = `<div class="intel-card" style="padding:14px 16px;color:var(--red)">Morning brief run failed: ${escapeHtml(String(e))}</div>`;
+    }
   }
 
   async function runDailyDigestNow() {

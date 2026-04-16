@@ -25,6 +25,14 @@ DEFAULT_PREFERENCES = {
     "digest_cache_window_minutes": 240,
     "todoist_nudge_daily_limit": 3,
     "todoist_nudge_mode": "conservative",
+    "morning_brief_enabled_sections": [
+        "digest",
+        "inbox_triage",
+        "gmail_triage",
+        "action_nudges",
+        "home_maintenance",
+        "pool_nudge",
+    ],
 }
 
 SKILLS = [
@@ -32,10 +40,10 @@ SKILLS = [
         "id": "daily_digest",
         "name": "Daily Digest",
         "category": "Executive",
-        "summary": "Assemble one morning digest from briefing, kids/school email, and research, then save to Notion and notify with highlights.",
-        "commands": ["/daily_digest", "/briefing", "/research", "/kids_digest"],
+        "summary": "Assemble one unified morning brief — digest (briefing+kids+research) plus iCloud triage, Gmail triage, action nudges, home ops, and pool nudge — then save to Notion and send one Telegram message.",
+        "commands": ["/morning_brief", "/daily_digest", "/briefing", "/research", "/kids_digest"],
         "surfaces": ["telegram", "web", "notion"],
-        "modules": ["daily_digest.py", "briefing.py", "daily_research.py", "kids_digest.py"],
+        "modules": ["morning_brief.py", "daily_digest.py", "briefing.py", "daily_research.py", "kids_digest.py"],
     },
     {
         "id": "inbox_triage",
@@ -192,6 +200,19 @@ def _coerce_preference(key: str, value):
         allowed = {"briefing", "kids", "research"}
         cleaned = [item for item in value if item in allowed]
         return cleaned or list(DEFAULT_PREFERENCES[key])
+    if key == "morning_brief_enabled_sections":
+        allowed = {
+            "digest",
+            "inbox_triage",
+            "gmail_triage",
+            "action_nudges",
+            "home_maintenance",
+            "pool_nudge",
+        }
+        if isinstance(value, str):
+            value = [v.strip() for v in value.split(",") if v.strip()]
+        cleaned = [item for item in (value or []) if item in allowed]
+        return cleaned or list(DEFAULT_PREFERENCES[key])
     if key == "digest_notification_verbosity":
         return value if value in {"compact", "highlights", "full"} else DEFAULT_PREFERENCES[key]
     if key == "digest_weekend_mode":
@@ -243,6 +264,22 @@ def get_effective_digest_sections(prefs: dict, now: datetime | None = None) -> l
     sections = list(prefs.get("digest_enabled_sections") or DEFAULT_PREFERENCES["digest_enabled_sections"])
     if current.weekday() >= 5 and prefs.get("digest_weekend_mode") == "lighter":
         sections = [section for section in sections if section != "research"] or ["briefing", "kids"]
+    return sections
+
+
+def get_effective_morning_sections(prefs: dict, now: datetime | None = None) -> list[str]:
+    """Which morning-brief sections should run right now, honoring weekend mode."""
+    current = now or datetime.now(ET)
+    sections = list(
+        prefs.get("morning_brief_enabled_sections")
+        or DEFAULT_PREFERENCES["morning_brief_enabled_sections"]
+    )
+    if current.weekday() >= 5 and prefs.get("digest_weekend_mode") == "lighter":
+        # On weekends, drop the noisy workday-only sections.
+        sections = [
+            s for s in sections
+            if s not in {"action_nudges", "gmail_triage"}
+        ] or ["digest"]
     return sections
 
 
@@ -603,12 +640,7 @@ def get_skills_overview_text() -> str:
 
 KNOWN_SCHEDULED_JOBS = [
     "financial_sync",
-    "daily_digest",
-    "inbox_triage",
-    "gmail_triage",
-    "action_nudges",
-    "pool_nudge",
-    "home_maintenance",
+    "morning_brief",
     "weekly_finance_digest",
 ]
 

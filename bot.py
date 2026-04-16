@@ -23,12 +23,7 @@ ET = ZoneInfo("America/New_York")
 SCHEDULED_JOB_KWARGS = {"coalesce": True, "max_instances": 1, "misfire_grace_time": 1800}
 SCHEDULED_JOB_LOCKS = {
     "financial_sync": asyncio.Lock(),
-    "daily_digest": asyncio.Lock(),
-    "inbox_triage": asyncio.Lock(),
-    "gmail_triage": asyncio.Lock(),
-    "action_nudges": asyncio.Lock(),
-    "pool_nudge": asyncio.Lock(),
-    "home_maintenance": asyncio.Lock(),
+    "morning_brief": asyncio.Lock(),
     "weekly_finance_digest": asyncio.Lock(),
 }
 
@@ -80,11 +75,7 @@ async def _schedule_startup_catchup(application):
     now = datetime.now(ET)
     windows = [
         ("financial_sync", 4, 40, 180, scheduled_financial_sync),
-        ("daily_digest", 6, 45, 120, scheduled_daily_digest),
-        ("inbox_triage", 7, 0, 90, scheduled_triage),
-        ("gmail_triage", 7, 15, 90, scheduled_gmail_triage),
-        ("action_nudges", 7, 35, 120, scheduled_action_nudges),
-        ("home_maintenance", 8, 5, 120, scheduled_home_maintenance),
+        ("morning_brief", 6, 45, 180, scheduled_morning_brief),
     ]
     for name, hour, minute, window_mins, callback in windows:
         scheduled = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
@@ -154,6 +145,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         for i in range(0, len(response), 4096):
             await update.message.reply_text(response[i:i+4096])
+
+
+@authorized_only
+async def morning_brief_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Run the full morning brief on demand — digest + triage + nudges + home + pool."""
+    await update.message.reply_text("Running your morning brief... this may take a moment.")
+    await update.message.chat.send_action("typing")
+    try:
+        from morning_brief import run_morning_brief
+        result = await run_morning_brief()
+        parts = result.get("parts") or [result.get("text", "Morning brief complete.")]
+        for chunk in parts:
+            if chunk:
+                await update.message.reply_text(chunk)
+    except Exception as e:
+        logger.error(f"Morning brief error: {e}")
+        await update.message.reply_text(f"Morning brief failed: {e}")
 
 
 @authorized_only
@@ -863,128 +871,33 @@ async def home_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Home command failed: {e}")
 
 
-async def scheduled_triage(context: ContextTypes.DEFAULT_TYPE):
-    """Scheduled daily inbox triage at 7am ET."""
+async def scheduled_morning_brief(context: ContextTypes.DEFAULT_TYPE):
+    """Unified morning brief — one scheduled job, one audit row, one notification.
+
+    Runs daily digest + iCloud triage + Gmail triage + action nudges +
+    home maintenance + pool nudge in parallel via morning_brief.run_morning_brief,
+    then sends the stitched result as one (or more, if >4000 chars) Telegram
+    message.
+    """
     async def _runner():
-        logger.info("Running scheduled inbox triage")
+        logger.info("Running scheduled morning brief")
         try:
-            from inbox_triage import run_triage
-            text = await run_triage()
-            await context.bot.send_message(chat_id=AUTHORIZED_USER_ID, text=text)
+            from morning_brief import run_morning_brief
+
+            result = await run_morning_brief()
+            parts = result.get("parts") or [result.get("text", "Morning brief complete.")]
+            for chunk in parts:
+                if chunk:
+                    await context.bot.send_message(chat_id=AUTHORIZED_USER_ID, text=chunk)
         except Exception as e:
-            logger.error(f"Scheduled triage error: {e}")
+            logger.error(f"Scheduled morning brief error: {e}")
             await context.bot.send_message(
                 chat_id=AUTHORIZED_USER_ID,
-                text=f"Morning triage failed: {e}"
+                text=f"Morning brief failed: {e}",
             )
             raise
 
-    await _run_scheduled("inbox_triage", context, _runner)
-
-
-async def scheduled_gmail_triage(context: ContextTypes.DEFAULT_TYPE):
-    """Scheduled daily Gmail triage — last 48 hrs, capped at 50 emails."""
-    async def _runner():
-        logger.info("Running scheduled Gmail triage")
-        try:
-            from inbox_triage import run_gmail_triage
-            text = await run_gmail_triage(
-                max_emails=50,
-                query="in:inbox newer_than:2d",
-            )
-            await context.bot.send_message(chat_id=AUTHORIZED_USER_ID, text=text)
-        except Exception as e:
-            logger.error(f"Scheduled Gmail triage error: {e}")
-            await context.bot.send_message(
-                chat_id=AUTHORIZED_USER_ID,
-                text=f"Gmail triage failed: {e}"
-            )
-            raise
-
-    await _run_scheduled("gmail_triage", context, _runner)
-
-
-async def scheduled_action_nudges(context: ContextTypes.DEFAULT_TYPE):
-    """Scheduled daily email and intentionality Todoist nudges."""
-    async def _runner():
-        logger.info("Running scheduled action nudges")
-        try:
-            from nudges import run_daily_email_action_nudges
-            text = await run_daily_email_action_nudges(notify_empty=False)
-            if text:
-                await context.bot.send_message(chat_id=AUTHORIZED_USER_ID, text=text)
-        except Exception as e:
-            logger.error(f"Scheduled action nudges error: {e}")
-            await context.bot.send_message(
-                chat_id=AUTHORIZED_USER_ID,
-                text=f"Action nudges failed: {e}"
-            )
-            raise
-
-    await _run_scheduled("action_nudges", context, _runner)
-
-
-async def scheduled_pool_nudge(context: ContextTypes.DEFAULT_TYPE):
-    """Scheduled pool reminder check (Monday-only logic inside nudges module)."""
-    async def _runner():
-        logger.info("Running scheduled pool nudge check")
-        try:
-            from nudges import run_weekly_pool_nudge
-            text = await run_weekly_pool_nudge(force=False, notify_empty=False)
-            if text:
-                await context.bot.send_message(chat_id=AUTHORIZED_USER_ID, text=text)
-        except Exception as e:
-            logger.error(f"Scheduled pool nudge error: {e}")
-            await context.bot.send_message(
-                chat_id=AUTHORIZED_USER_ID,
-                text=f"Pool nudge check failed: {e}"
-            )
-            raise
-
-    await _run_scheduled("pool_nudge", context, _runner)
-
-
-async def scheduled_home_maintenance(context: ContextTypes.DEFAULT_TYPE):
-    """Scheduled daily home maintenance sync to Todoist."""
-    async def _runner():
-        logger.info("Running scheduled home maintenance sync")
-        try:
-            from home_ops import run_home_maintenance_check
-            text = await run_home_maintenance_check(days_ahead=7, notify_empty=False)
-            if text:
-                await context.bot.send_message(chat_id=AUTHORIZED_USER_ID, text=text)
-        except Exception as e:
-            logger.error(f"Scheduled home maintenance error: {e}")
-            await context.bot.send_message(
-                chat_id=AUTHORIZED_USER_ID,
-                text=f"Home maintenance sync failed: {e}"
-            )
-            raise
-
-    await _run_scheduled("home_maintenance", context, _runner)
-
-
-async def scheduled_daily_digest(context: ContextTypes.DEFAULT_TYPE):
-    """Scheduled unified morning digest."""
-    async def _runner():
-        logger.info("Running scheduled daily digest")
-        try:
-            from daily_digest import run_daily_digest
-
-            payload = await run_daily_digest()
-            await context.bot.send_message(
-                chat_id=AUTHORIZED_USER_ID,
-                text=payload.get("notification_text", "Daily digest complete."),
-            )
-        except Exception as e:
-            logger.error(f"Scheduled daily digest error: {e}")
-            await context.bot.send_message(
-                chat_id=AUTHORIZED_USER_ID,
-                text=f"Daily digest failed: {e}",
-            )
-            raise
-
-    await _run_scheduled("daily_digest", context, _runner)
+    await _run_scheduled("morning_brief", context, _runner)
 
 
 async def scheduled_financial_sync(context: ContextTypes.DEFAULT_TYPE):
@@ -1062,6 +975,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("skills", skills_command))
+    app.add_handler(CommandHandler("morning_brief", morning_brief_command))
     app.add_handler(CommandHandler("daily_digest", daily_digest_command))
     app.add_handler(CommandHandler("briefing", briefing_command))
     app.add_handler(CommandHandler("family_calendar", family_calendar_command))
@@ -1087,7 +1001,7 @@ def main():
     app.add_handler(CommandHandler("home", home_command))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Daily financial cache sync at 4:40 AM ET
+    # Daily financial cache sync at 4:40 AM ET (silent pre-warm)
     app.job_queue.run_daily(
         scheduled_financial_sync,
         time=time(hour=4, minute=40, tzinfo=ET),
@@ -1095,51 +1009,11 @@ def main():
         job_kwargs=SCHEDULED_JOB_KWARGS,
     )
 
-    # Daily inbox triage at 7:00 AM ET
+    # Unified morning brief at 6:45 AM ET — one job, one notification
     app.job_queue.run_daily(
-        scheduled_triage,
-        time=time(hour=7, minute=0, tzinfo=ET),
-        name="inbox_triage",
-        job_kwargs=SCHEDULED_JOB_KWARGS,
-    )
-
-    # Daily Gmail triage at 7:15 AM ET (recent 48 hrs, capped at 50)
-    app.job_queue.run_daily(
-        scheduled_gmail_triage,
-        time=time(hour=7, minute=15, tzinfo=ET),
-        name="gmail_triage",
-        job_kwargs=SCHEDULED_JOB_KWARGS,
-    )
-
-    # Unified morning digest at 6:45 AM ET
-    app.job_queue.run_daily(
-        scheduled_daily_digest,
+        scheduled_morning_brief,
         time=time(hour=6, minute=45, tzinfo=ET),
-        name="daily_digest",
-        job_kwargs=SCHEDULED_JOB_KWARGS,
-    )
-
-    # Daily actionable-email nudges at 7:35 AM ET
-    app.job_queue.run_daily(
-        scheduled_action_nudges,
-        time=time(hour=7, minute=35, tzinfo=ET),
-        name="action_nudges",
-        job_kwargs=SCHEDULED_JOB_KWARGS,
-    )
-
-    # Pool nudge check at 8:20 AM ET (module enforces Monday-only unless forced)
-    app.job_queue.run_daily(
-        scheduled_pool_nudge,
-        time=time(hour=8, minute=20, tzinfo=ET),
-        name="pool_nudge",
-        job_kwargs=SCHEDULED_JOB_KWARGS,
-    )
-
-    # Daily home maintenance sync at 8:05 AM ET
-    app.job_queue.run_daily(
-        scheduled_home_maintenance,
-        time=time(hour=8, minute=5, tzinfo=ET),
-        name="home_maintenance",
+        name="morning_brief",
         job_kwargs=SCHEDULED_JOB_KWARGS,
     )
 
