@@ -1,0 +1,30 @@
+{
+  "auto_apply_actions": [
+    "archive"
+  ],
+  "gmail_query": "newer_than:2d",
+  "icloud_action_folder": "Action",
+  "icloud_archive_folder": "Archive",
+  "icloud_follow_up_folder": "Follow Up",
+  "icloud_scan_folders": [
+    "INBOX",
+    "Junk",
+    "Action",
+    "Follow Up"
+  ],
+  "max_apply": 25,
+  "never_touch_senders": [
+    "noreply@email.apple.com",
+    "reservations@res-marriott.com",
+    "support@whoop.com"
+  ],
+  "safe_archive_senders": [
+    "access@interactive.wsj.com",
+    "breakingnews@nytimes.com",
+    "cooking-recommendations@nytimes.com",
+    "email@promotion.bedbathandbeyond.com",
+    "hello@mail.grammarly.com",
+    "reply@is.email.nextdoor.com",
+    "store-news@amazon.com"
+  ]
+}

@@ -1,0 +1,24 @@
+[accounts.icloud]
+email = "thematthewturner@icloud.com"
+display-name = "Matt Turner"
+default = true
+
+backend.type = "imap"
+backend.host = "imap.mail.me.com"
+backend.port = 993
+backend.encryption.type = "tls"
+backend.login = "thematthewturner@icloud.com"
+backend.auth.type = "password"
+backend.auth.cmd = "/opt/data/bin/icloud_mail_password"
+
+[accounts.toni_icloud]
+email = "thetoniturner@icloud.com"
+display-name = "Toni Turner"
+
+backend.type = "imap"
+backend.host = "imap.mail.me.com"
+backend.port = 993
+backend.encryption.type = "tls"
+backend.login = "thetoniturner@icloud.com"
+backend.auth.type = "password"
+backend.auth.cmd = "/opt/data/bin/icloud_toni_mail_password"

@@ -1,0 +1,183 @@
+{
+  "jobs": [
+    {
+      "id": "164460109427",
+      "name": "Jarvis Brain \u2014 Nightly arXiv Research",
+      "prompt": "You are Jarvis, Matt Turner's research agent. Every night you search arXiv for new papers across Matt's key domains, synthesize the high-signal findings, and ingest them into his Jarvis Brain wiki.\n\n## Wiki Location\nWIKI_PATH=/opt/data/jarvis/wiki\n\n## Step 1 \u2014 Orient\nRead the wiki before doing anything:\n- /opt/data/jarvis/wiki/SCHEMA.md\n- /opt/data/jarvis/wiki/index.md\n- Last 20 lines of /opt/data/jarvis/wiki/log.md\n\n## Step 2 \u2014 Search arXiv\nSearch for recent papers (last 7 days) across these domains. Use sortBy=submittedDate, max_results=8 per query.\n\nSearch queries:\n1. `healthcare+AI+clinical+decision+support` (cat:cs.AI OR cs.LG)\n2. `large+language+model+healthcare+EHR`\n3. `longevity+aging+metabolic+health+intervention`\n4. `cardiovascular+risk+lipid+machine+learning`\n5. `AI+agents+autonomous+research`\n6. `data+governance+healthcare+metrics`\n7. `cognitive+load+AI+tools+human+performance`\n\nParse the arXiv XML response using python3. For each paper extract: arxiv ID, title, authors, date, abstract.\n\n## Step 3 \u2014 Filter\nKeep only papers that are:\n- Published in the last 7 days\n- Directly relevant to Matt's domains (skip tangential or purely theoretical work with no applied angle)\n- High signal: novel findings, benchmarks, clinical applications, or paradigm shifts\n\nTarget: 3-8 papers total across all searches. Quality over quantity.\n\n## Step 4 \u2014 Ingest into Wiki\nFor each kept paper:\n1. Save raw abstract to: /opt/data/jarvis/wiki/raw/papers/ARXIV-ID-short-title.md\n   Include frontmatter: source_url, ingested date, sha256 of body\n2. Check index.md \u2014 does a page already exist for this topic/entity?\n3. Create or update a concept page in /opt/data/jarvis/wiki/concepts/\n   - Use SCHEMA.md tag taxonomy\n   - Include: what the paper found, why it matters for Matt, open questions, [[wikilinks]] to related pages\n   - Set confidence based on paper quality (peer reviewed = high, preprint single study = medium)\n4. Update /opt/data/jarvis/wiki/index.md \u2014 add new pages, update total count + date\n5. Append to /opt/data/jarvis/wiki/log.md\n\n## Step 5 \u2014 Output\nPrint a concise Telegram-ready summary:\n\n\ud83e\udde0 **Jarvis Brain \u2014 Nightly Research** [DATE]\n\n**[Domain]**\n- \ud83d\udcc4 Paper title \u2014 one sentence finding. [arxiv:ID]\n\nList each ingested paper this way, grouped by domain.\n\nEnd with:\n> Wiki updated: N new pages, M updated. Total pages: X.\n\nIf no high-signal papers found tonight, print:\n[QUIET NIGHT] No papers met the bar tonight. Wiki unchanged.\n",
+      "skills": [
+        "arxiv",
+        "llm-wiki"
+      ],
+      "skill": "arxiv",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 2 * * *",
+        "display": "0 2 * * *"
+      },
+      "schedule_display": "0 2 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 3
+      },
+      "enabled": false,
+      "state": "paused",
+      "paused_at": "2026-05-02T14:08:04.123333+00:00",
+      "paused_reason": "Telegram cleanup: disabled all scheduled notifications except Jarvis Daily Brief",
+      "created_at": "2026-04-29T13:12:03.756458+00:00",
+      "next_run_at": "2026-05-03T02:00:00+00:00",
+      "last_run_at": "2026-05-02T02:15:25.709312+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "8515656003",
+        "chat_name": "Matt Turner",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "web",
+        "terminal",
+        "file"
+      ],
+      "workdir": null
+    },
+    {
+      "id": "d1bcd596ae6f",
+      "name": "Daily Usage Report",
+      "prompt": "Run the Hermes usage monitor and send a daily cost/token summary. Execute:\n\n/opt/hermes/.venv/bin/python /opt/data/jarvis/usage_monitor.py --days 1 --sessions --top 10\n\nThen also run for 7 days:\n/opt/hermes/.venv/bin/python /opt/data/jarvis/usage_monitor.py --days 7\n\nFormat the output as a clean Telegram message like:\n\n\ud83d\udcca **Hermes Usage \u2014 [DATE]**\n\n**Yesterday**\n\u2022 Sessions: N | Messages: N | Tool calls: N\n\u2022 Tokens: Xk in / Xk out / XM cache read\n\u2022 Cost: $X.XX (cache saved $X.XX)\n\n**Last 7 Days**\n\u2022 Cost: $X.XX total\n\u2022 Biggest session: [title] \u2014 $X.XX\n\nKeep it concise. Just the numbers that matter.\n",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * *",
+        "display": "0 8 * * *"
+      },
+      "schedule_display": "0 8 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 3
+      },
+      "enabled": false,
+      "state": "paused",
+      "paused_at": "2026-05-02T14:08:04.123333+00:00",
+      "paused_reason": "Telegram cleanup: disabled all scheduled notifications except Jarvis Daily Brief",
+      "created_at": "2026-04-29T14:02:15.280277+00:00",
+      "next_run_at": "2026-05-03T08:00:00+00:00",
+      "last_run_at": "2026-05-02T08:00:20.570457+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "8515656003",
+        "chat_name": "Matt Turner",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "file"
+      ],
+      "workdir": null
+    },
+    {
+      "id": "b9d1850a453f",
+      "name": "Mt Pleasant Family Events Weekly",
+      "prompt": "Search the web for upcoming family-friendly events in Mount Pleasant, SC and the greater Charleston, SC area for the next 60-90 days (look several months ahead).\n\nSearch these sources:\n- Eventbrite (search \"family events Mount Pleasant SC\", \"family events Charleston SC\", \"5K race Charleston SC\", \"5K run Mount Pleasant SC\")\n- Mount Pleasant Parks & Recreation (tompsc.com)\n- Charleston City Paper events (charlestoncitypaper.com/events)\n- DoStuff Charleston\n- Mount Pleasant Magazine events\n- Charleston County Parks (ccprc.com)\n- RunSignUp.com (search Charleston SC 5K races)\n- Active.com (search 5K Charleston SC)\n- Charleston Running Club events\n- Local race series (Cooper River Bridge Run, Lowcountry events)\n\nCompile a digest of the best upcoming events split into TWO sections:\n\n**SECTION 1 \u2014 \ud83c\udfc3 5K Races & Fun Runs** (next 90 days)\nInclude ALL 5Ks, fun runs, color runs, holiday runs, charity races you can find. For each:\n- Race name\n- Date & time\n- Location\n- Distance (5K, 1-mile kids fun run, etc.)\n- Cost / registration link\n- Kid-friendly? (yes/no)\n\n**SECTION 2 \u2014 \ud83c\udf89 Family Events** (next 2-3 weeks highlights)\n8-10 family-friendly events: festivals, outdoor activities, kids activities, free community events.\n- Event name\n- Date & time\n- Location/venue\n- Brief description (1-2 sentences)\n- Cost (free or $X)\n- Link if available\n\nFormat as a friendly Telegram message with emojis. Header:\n\n\ud83d\uddd3 **Mt Pleasant Family Events & Races \u2014 [MONTH YEAR]**\n\nPrioritize free or low-cost events. Exclude adult-only bars/clubs/nightlife.\n\nEnd with: \"Have a great week, Turner family! \ud83c\udf89\"",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * 1",
+        "display": "0 8 * * 1"
+      },
+      "schedule_display": "0 8 * * 1",
+      "repeat": {
+        "times": null,
+        "completed": 1
+      },
+      "enabled": false,
+      "state": "paused",
+      "paused_at": "2026-05-02T14:08:04.123333+00:00",
+      "paused_reason": "Telegram cleanup: disabled all scheduled notifications except Jarvis Daily Brief",
+      "created_at": "2026-04-29T14:16:05.116398+00:00",
+      "next_run_at": "2026-05-04T08:00:00+00:00",
+      "last_run_at": "2026-04-29T14:18:06.766164+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "8515656003",
+        "chat_name": "Matt Turner",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "web"
+      ],
+      "workdir": null
+    },
+    {
+      "id": "221bdc28886e",
+      "name": "Jarvis Daily Brief",
+      "prompt": "Run the Jarvis daily digest script for the 6:30 AM ET daily brief and output its result exactly as-is.\n\nRun this terminal command:\n/opt/hermes/.venv/bin/python /opt/data/jarvis/daily_digest.py\n\nThe script collects all 6 sources (iCloud mail, Gmail, Google Calendar, blogs/news, weather for Mt Pleasant SC, and Todoist tasks due today/overdue) then synthesizes them into a morning brief using Claude and writes the full version to Notion.\n\nOutput rules:\n- If the script prints [SILENT] \u2192 output nothing at all (digest already ran today)\n- Otherwise \u2192 output the digest message EXACTLY as returned by the script, with no changes, no reformatting, no added commentary\n\nThe script handles everything \u2014 just run it and relay the output.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 10 * * *",
+        "display": "30 10 * * *"
+      },
+      "schedule_display": "30 10 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 5
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-04-29T14:45:28.393358+00:00",
+      "next_run_at": "2026-05-03T10:30:00+00:00",
+      "last_run_at": "2026-05-02T07:01:01.238649+00:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:8515656003",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "8515656003",
+        "chat_name": "Matt Turner",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": null
+    }
+  ],
+  "updated_at": "2026-05-02T16:30:00+00:00"
+}
